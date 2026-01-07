@@ -460,5 +460,168 @@ export const mockAPI = {
   getPhieuThuChi: async () => {
     await delay(300)
     return mockPhieuThuChi
+  },
+
+  // ============= AR DASHBOARD APIs =============
+  
+  // Lấy tổng hợp công nợ khách hàng
+  getARSummary: async (params) => {
+    await delay(500)
+    const { fromDate, toDate, customerId } = params
+    
+    // Lọc SO theo ngày và customer
+    let filteredSO = mockSalesOrders.filter(so => {
+      // Giả lập filter theo ngày (thực tế cần so sánh với createdDate của SO)
+      if (customerId && so.customerId !== customerId) return false
+      return true
+    })
+
+    // Group by customer
+    const customerGroups = {}
+    filteredSO.forEach(so => {
+      if (!customerGroups[so.customerId]) {
+        customerGroups[so.customerId] = {
+          customerId: so.customerId,
+          customerName: so.customer,
+          orders: []
+        }
+      }
+      customerGroups[so.customerId].orders.push(so)
+    })
+
+    // Tính toán cho từng customer
+    const summary = Object.values(customerGroups).map(group => {
+      // Công nợ tạm: >= DA_GIAO_THUC_TE (giả lập - trong thực tế cần status này)
+      const totalSales = group.orders
+        .filter(so => ['DA_DOI_CHIEU', 'CHO_THU_TIEN', 'DA_THU_TIEN'].includes(so.status))
+        .reduce((sum, so) => sum + so.amount, 0)
+
+      // Công nợ chính thức: >= DA_DOI_CHIEU
+      const accountingAR = group.orders
+        .filter(so => ['DA_DOI_CHIEU', 'CHO_THU_TIEN', 'DA_THU_TIEN'].includes(so.status))
+        .reduce((sum, so) => sum + so.amount, 0)
+
+      // Đã thanh toán: DA_THU_TIEN
+      const paid = group.orders
+        .filter(so => so.status === 'DA_THU_TIEN')
+        .reduce((sum, so) => sum + so.amount, 0)
+
+      // Còn lại
+      const remaining = accountingAR - paid
+
+      return {
+        customerId: group.customerId,
+        customerName: group.customerName,
+        totalSales,
+        accountingAR,
+        paid,
+        remaining
+      }
+    })
+
+    return summary
+  },
+
+  // Lấy chi tiết đơn hàng của khách hàng
+  getCustomerOrders: async (params) => {
+    await delay(300)
+    const { customerId, fromDate, toDate } = params
+    
+    const orders = mockSalesOrders
+      .filter(so => so.customerId === customerId)
+      .map(so => ({
+        id: so.id,
+        maDon: so.maDon,
+        ngay: '01/01/2026', // Giả lập
+        amount: so.amount,
+        status: so.status,
+        statusDisplay: so.status === 'DA_DOI_CHIEU' ? 'ĐÃ ĐỐI CHIẾU' 
+          : so.status === 'CHO_THU_TIEN' ? 'ĐÃ ĐỐI CHIẾU'
+          : so.status === 'DA_THU_TIEN' ? 'ĐÃ THU TIỀN'
+          : 'ĐÃ NHẬN'
+      }))
+
+    return orders
+  },
+
+  // ============= AP DASHBOARD APIs =============
+  
+  // Lấy tổng hợp công nợ nhà cung cấp
+  getAPSummary: async (params) => {
+    await delay(500)
+    const { fromDate, toDate, supplierId } = params
+    
+    // Lọc PO theo ngày và supplier
+    let filteredPO = mockPurchaseOrders.filter(po => {
+      if (supplierId && po.supplierId !== supplierId) return false
+      return true
+    })
+
+    // Group by supplier
+    const supplierGroups = {}
+    filteredPO.forEach(po => {
+      if (!supplierGroups[po.supplierId]) {
+        supplierGroups[po.supplierId] = {
+          supplierId: po.supplierId,
+          supplierName: po.supplier,
+          orders: []
+        }
+      }
+      supplierGroups[po.supplierId].orders.push(po)
+    })
+
+    // Tính toán cho từng supplier
+    const summary = Object.values(supplierGroups).map(group => {
+      // Công nợ tạm: >= DA_DOI_CHIEU
+      const totalPurchase = group.orders
+        .filter(po => ['DA_DOI_CHIEU', 'CHO_THANH_TOAN', 'DA_THANH_TOAN'].includes(po.status))
+        .reduce((sum, po) => sum + po.amount, 0)
+
+      // Công nợ chính thức: >= DA_DOI_CHIEU  
+      const accountingAP = group.orders
+        .filter(po => ['DA_DOI_CHIEU', 'CHO_THANH_TOAN', 'DA_THANH_TOAN'].includes(po.status))
+        .reduce((sum, po) => sum + po.amount, 0)
+
+      // Đã thanh toán: DA_THANH_TOAN
+      const paid = group.orders
+        .filter(po => po.status === 'DA_THANH_TOAN')
+        .reduce((sum, po) => sum + po.amount, 0)
+
+      // Còn lại
+      const remaining = accountingAP - paid
+
+      return {
+        supplierId: group.supplierId,
+        supplierName: group.supplierName,
+        totalPurchase,
+        accountingAP,
+        paid,
+        remaining
+      }
+    })
+
+    return summary
+  },
+
+  // Lấy chi tiết đơn hàng của nhà cung cấp
+  getSupplierOrders: async (params) => {
+    await delay(300)
+    const { supplierId, fromDate, toDate } = params
+    
+    const orders = mockPurchaseOrders
+      .filter(po => po.supplierId === supplierId)
+      .map(po => ({
+        id: po.id,
+        maDon: po.maDon,
+        ngay: '01/01/2026', // Giả lập
+        amount: po.amount,
+        status: po.status,
+        statusDisplay: po.status === 'DA_DOI_CHIEU' ? 'ĐÃ ĐỐI CHIẾU'
+          : po.status === 'CHO_THANH_TOAN' ? 'CHỜ THANH TOÁN'
+          : po.status === 'DA_THANH_TOAN' ? 'ĐÃ THANH TOÁN'
+          : 'MỚI'
+      }))
+
+    return orders
   }
 }

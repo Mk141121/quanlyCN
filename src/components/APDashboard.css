@@ -1,0 +1,19 @@
+.ap-dashboard-container {
+  padding: 20px;
+  min-height: 100vh;
+  background: #f0f2f5;
+}
+
+.ap-dashboard-container .ant-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ap-dashboard-container .ant-statistic-title {
+  font-size: 14px;
+  color: #666;
+}
+
+.ap-dashboard-container .ant-statistic-content {
+  font-size: 24px;
+}

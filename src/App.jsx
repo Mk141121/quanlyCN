@@ -4,6 +4,8 @@ import { FileAddOutlined, FileTextOutlined } from '@ant-design/icons'
 import OrderGrouper from './components/OrderGrouper'
 import DocumentSelector from './components/DocumentSelector'
 import PhieuThuChiForm from './components/PhieuThuChiForm'
+import ARDashboard from './components/ARDashboard'
+import APDashboard from './components/APDashboard'
 import './App.css'
 
 function App() {
@@ -65,7 +67,7 @@ function App() {
             </Space>
           </div>
 
-          <div>
+          <div style={{ marginBottom: 30 }}>
             <h3>💰 Lập Phiếu THU/CHI</h3>
             <Space direction="vertical" size="middle" style={{ width: '100%', maxWidth: 500 }}>
               <Button
@@ -93,6 +95,32 @@ function App() {
                 style={{ height: 60, fontSize: 16 }}
               >
                 💵 Phiếu Thu
+              </Button>
+            </Space>
+          </div>
+
+          <div>
+            <h3>📊 BÁO CÁO CÔNG NỢ</h3>
+            <Space direction="vertical" size="middle" style={{ width: '100%', maxWidth: 500 }}>
+              <Button
+                type="dashed"
+                size="large"
+                icon={<FileTextOutlined />}
+                onClick={() => setView('ar-dashboard')}
+                block
+                style={{ height: 60, fontSize: 16, borderColor: '#52c41a', color: '#52c41a' }}
+              >
+                📈 AR Dashboard - Công nợ Khách hàng
+              </Button>
+              <Button
+                type="dashed"
+                size="large"
+                icon={<FileTextOutlined />}
+                onClick={() => setView('ap-dashboard')}
+                block
+                style={{ height: 60, fontSize: 16, borderColor: '#1890ff', color: '#1890ff' }}
+              >
+                📉 AP Dashboard - Công nợ NCC
               </Button>
             </Space>
           </div>
@@ -139,6 +167,24 @@ function App() {
           onBack={() => setView('selector')}
           onSuccess={handleSuccess}
         />
+      </div>
+    )
+  }
+
+  // AR Dashboard
+  if (view === 'ar-dashboard') {
+    return (
+      <div className="app">
+        <ARDashboard onBack={handleBack} />
+      </div>
+    )
+  }
+
+  // AP Dashboard
+  if (view === 'ap-dashboard') {
+    return (
+      <div className="app">
+        <APDashboard onBack={handleBack} />
       </div>
     )
   }
