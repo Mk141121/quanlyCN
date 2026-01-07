@@ -8,13 +8,16 @@ import {
   Statistic,
   Space,
   Tag,
-  Radio
+  Radio,
+  Input
 } from 'antd'
 import {
   PlusOutlined,
   FileAddOutlined,
   ArrowLeftOutlined,
-  CheckOutlined
+  CheckOutlined,
+  SearchOutlined,
+  FilterOutlined
 } from '@ant-design/icons'
 import { mockAPI } from '../utils/mockAPICongNo'
 import './OrderGrouper.css'
@@ -28,6 +31,89 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
   const [availableOrders, setAvailableOrders] = useState([])
   const [selectedOrderIds, setSelectedOrderIds] = useState([])
   const [submitting, setSubmitting] = useState(false)
+
+  // Helper function for text search filter
+  const getColumnSearchProps = (dataIndex, placeholder) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      <div style={{ padding: 8 }}>
+        <Input
+          placeholder={`Tìm ${placeholder}`}
+          value={selectedKeys[0]}
+          onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => confirm()}
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => confirm()}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Tìm
+          </Button>
+          <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+            Xóa
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+    onFilter: (value, record) => 
+      record[dataIndex]?.toString().toLowerCase().includes(value.toLowerCase())
+  })
+
+  // Helper function for number range filter
+  const getNumberRangeFilterProps = (dataIndex, placeholder) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      <div style={{ padding: 8 }}>
+        <Space direction="vertical">
+          <Input
+            placeholder={`${placeholder} từ`}
+            type="number"
+            value={selectedKeys[0]?.min}
+            onChange={e => {
+              const newValue = { ...selectedKeys[0], min: e.target.value }
+              setSelectedKeys([newValue])
+            }}
+            style={{ width: 150 }}
+          />
+          <Input
+            placeholder={`${placeholder} đến`}
+            type="number"
+            value={selectedKeys[0]?.max}
+            onChange={e => {
+              const newValue = { ...selectedKeys[0], max: e.target.value }
+              setSelectedKeys([newValue])
+            }}
+            style={{ width: 150 }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              size="small"
+              style={{ width: 70 }}
+            >
+              Lọc
+            </Button>
+            <Button onClick={() => clearFilters()} size="small" style={{ width: 70 }}>
+              Xóa
+            </Button>
+          </Space>
+        </Space>
+      </div>
+    ),
+    filterIcon: filtered => <FilterOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+    onFilter: (value, record) => {
+      if (!value) return true
+      const recordValue = record[dataIndex]
+      const min = value.min ? parseFloat(value.min) : -Infinity
+      const max = value.max ? parseFloat(value.max) : Infinity
+      return recordValue >= min && recordValue <= max
+    }
+  })
 
   useEffect(() => {
     loadPartners()
@@ -82,7 +168,8 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
       dataIndex: 'maDon',
       key: 'maDon',
       width: 150,
-      render: (text) => <strong>{text}</strong>
+      render: (text) => <strong>{text}</strong>,
+      ...getColumnSearchProps('maDon', 'mã đơn')
     },
     {
       title: 'Số tiền',
@@ -94,7 +181,9 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
         <span style={{ fontSize: 16, fontWeight: 500 }}>
           {amount.toLocaleString()} VND
         </span>
-      )
+      ),
+      ...getNumberRangeFilterProps('amount', 'Số tiền'),
+      sorter: (a, b) => a.amount - b.amount
     },
     {
       title: 'Trạng thái',
@@ -103,7 +192,13 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
       width: 150,
       render: (status) => (
         <Tag color="blue">{status}</Tag>
-      )
+      ),
+      filters: [
+        { text: 'DA_DOI_CHIEU', value: 'DA_DOI_CHIEU' },
+        { text: 'CHO_THANH_TOAN', value: 'CHO_THANH_TOAN' },
+        { text: 'ACTIVE', value: 'ACTIVE' },
+      ],
+      onFilter: (value, record) => record.status === value
     }
   ]
 
@@ -172,6 +267,10 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
             Chọn {type === 'AP' ? 'Nhà cung cấp' : 'Khách hàng'}:
           </label>
           <Select
+            showSearch
+            filterOption={(input, option) =>
+              (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+            }
             style={{ width: '100%', maxWidth: 500 }}
             placeholder={`Chọn ${type === 'AP' ? 'nhà cung cấp' : 'khách hàng'}`}
             onChange={(value) => {

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Card, Table, Button, Tag, Radio, message, Spin } from 'antd'
-import { FileTextOutlined, RightOutlined, ArrowLeftOutlined } from '@ant-design/icons'
+import { Card, Table, Button, Tag, Radio, message, Spin, Input, Space, DatePicker } from 'antd'
+import { FileTextOutlined, RightOutlined, ArrowLeftOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons'
 import { mockAPI } from '../utils/mockAPICongNo'
+import dayjs from 'dayjs'
 import './DocumentSelector.css'
+
+const { RangePicker } = DatePicker
 
 // Màu sắc theo SPEC
 const STATUS_COLORS = {
@@ -44,6 +47,133 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
   const loaiPhieu = type === 'AP' ? 'CHI' : 'THU'
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(false)
+
+  // Helper function for text search filter
+  const getColumnSearchProps = (dataIndex, placeholder) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      <div style={{ padding: 8 }}>
+        <Input
+          placeholder={`Tìm ${placeholder}`}
+          value={selectedKeys[0]}
+          onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => confirm()}
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => confirm()}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Tìm
+          </Button>
+          <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+            Xóa
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+    onFilter: (value, record) => 
+      record[dataIndex]?.toString().toLowerCase().includes(value.toLowerCase())
+  })
+
+  // Helper function for status filter
+  const getStatusFilterProps = () => ({
+    filters: [
+      { text: 'Đã thanh toán', value: 'DA_THANH_TOAN' },
+      { text: 'Chờ thanh toán', value: 'CHO_THANH_TOAN' },
+      { text: 'Chờ thu tiền', value: 'CHO_THU_TIEN' },
+      { text: 'Thanh toán 1 phần', value: 'PARTIAL' },
+    ],
+    onFilter: (value, record) => record.status === value,
+    filterIcon: filtered => <FilterOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+  })
+
+  // Helper function for date range filter
+  const getDateRangeFilterProps = (dataIndex) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      <div style={{ padding: 8 }}>
+        <RangePicker
+          format="DD/MM/YYYY"
+          onChange={(dates) => setSelectedKeys(dates ? [dates] : [])}
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => confirm()}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Lọc
+          </Button>
+          <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+            Xóa
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: filtered => <FilterOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+    onFilter: (value, record) => {
+      if (!value || value.length !== 2) return true
+      const recordDate = dayjs(record[dataIndex])
+      return recordDate.isAfter(value[0]) && recordDate.isBefore(value[1])
+    }
+  })
+
+  // Helper function for number range filter
+  const getNumberRangeFilterProps = (dataIndex, placeholder) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      <div style={{ padding: 8 }}>
+        <Space direction="vertical">
+          <Input
+            placeholder={`${placeholder} từ`}
+            type="number"
+            value={selectedKeys[0]?.min}
+            onChange={e => {
+              const newValue = { ...selectedKeys[0], min: e.target.value }
+              setSelectedKeys([newValue])
+            }}
+            style={{ width: 150 }}
+          />
+          <Input
+            placeholder={`${placeholder} đến`}
+            type="number"
+            value={selectedKeys[0]?.max}
+            onChange={e => {
+              const newValue = { ...selectedKeys[0], max: e.target.value }
+              setSelectedKeys([newValue])
+            }}
+            style={{ width: 150 }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              size="small"
+              style={{ width: 70 }}
+            >
+              Lọc
+            </Button>
+            <Button onClick={() => clearFilters()} size="small" style={{ width: 70 }}>
+              Xóa
+            </Button>
+          </Space>
+        </Space>
+      </div>
+    ),
+    filterIcon: filtered => <FilterOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+    onFilter: (value, record) => {
+      if (!value) return true
+      const recordValue = record[dataIndex]
+      const min = value.min ? parseFloat(value.min) : -Infinity
+      const max = value.max ? parseFloat(value.max) : Infinity
+      return recordValue >= min && recordValue <= max
+    }
+  })
 
   useEffect(() => {
     loadDocuments()
@@ -102,20 +232,24 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
         <Tag color="blue" style={{ fontSize: 14 }}>
           {text}
         </Tag>
-      )
+      ),
+      ...getColumnSearchProps('code', 'mã chứng từ')
     },
     {
       title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 160,
-      render: (date) => date ? new Date(date).toLocaleString('vi-VN') : '-'
+      render: (date) => date ? new Date(date).toLocaleString('vi-VN') : '-',
+      ...getDateRangeFilterProps('createdAt'),
+      sorter: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix()
     },
     {
       title: 'Đối tượng',
       dataIndex: 'partner',
       key: 'partner',
-      ellipsis: true
+      ellipsis: true,
+      ...getColumnSearchProps('partner', 'đối tượng')
     },
     {
       title: 'Số tiền',
@@ -127,7 +261,9 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
         <strong style={{ fontSize: 16, color: '#1890ff' }}>
           {amount.toLocaleString()} VND
         </strong>
-      )
+      ),
+      ...getNumberRangeFilterProps('amount', 'Số tiền'),
+      sorter: (a, b) => a.amount - b.amount
     },
     {
       title: 'Số đơn hàng',
@@ -137,7 +273,8 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
       align: 'center',
       render: (count) => (
         <Tag color="cyan">{count} đơn</Tag>
-      )
+      ),
+      sorter: (a, b) => a.itemCount - b.itemCount
     },
     {
       title: 'Trạng thái',
@@ -150,7 +287,8 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
             {paymentStatus.label}
           </Tag>
         )
-      }
+      },
+      ...getStatusFilterProps()
     },
     {
       title: 'Thao tác',

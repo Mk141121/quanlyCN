@@ -1,16 +1,20 @@
-import React, { useState, useEffect } from 'react'
-import { Card, Row, Col, Statistic, Table, Tag, Button, Progress, Alert, Layout } from 'antd'
+import React, { useState, useEffect, useRef } from 'react'
+import { Card, Row, Col, Statistic, Table, Tag, Button, Progress, Alert, Layout, Input, Space, DatePicker } from 'antd'
 import { 
   DollarOutlined, 
   ShoppingCartOutlined, 
   CheckCircleOutlined,
   ClockCircleOutlined,
   WarningOutlined,
-  PictureOutlined
+  PictureOutlined,
+  SearchOutlined,
+  FilterOutlined
 } from '@ant-design/icons'
 import { mockAPI } from '../utils/mockAPICongNo'
 import dayjs from 'dayjs'
 import './GeneralDashboard.css'
+
+const { RangePicker } = DatePicker
 
 const { Sider, Content } = Layout
 
@@ -76,6 +80,133 @@ function GeneralDashboard({
     return <Tag color="default">MỚI</Tag>
   }
 
+  // Helper function for text search filter
+  const getColumnSearchProps = (dataIndex, placeholder) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      <div style={{ padding: 8 }}>
+        <Input
+          placeholder={`Tìm ${placeholder}`}
+          value={selectedKeys[0]}
+          onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => confirm()}
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => confirm()}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Tìm
+          </Button>
+          <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+            Xóa
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+    onFilter: (value, record) => 
+      record[dataIndex]?.toString().toLowerCase().includes(value.toLowerCase())
+  })
+
+  // Helper function for status filter
+  const getStatusFilterProps = () => ({
+    filters: [
+      { text: 'Đã thanh toán', value: 'DA_THANH_TOAN' },
+      { text: 'Chờ thanh toán', value: 'CHO_THANH_TOAN' },
+      { text: 'Chờ thu tiền', value: 'CHO_THU_TIEN' },
+      { text: 'Thanh toán 1 phần', value: 'PARTIAL' },
+    ],
+    onFilter: (value, record) => record.status === value,
+    filterIcon: filtered => <FilterOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+  })
+
+  // Helper function for date range filter
+  const getDateRangeFilterProps = (dataIndex) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      <div style={{ padding: 8 }}>
+        <RangePicker
+          format="DD/MM/YYYY"
+          onChange={(dates) => setSelectedKeys(dates ? [dates] : [])}
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => confirm()}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Lọc
+          </Button>
+          <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+            Xóa
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: filtered => <FilterOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+    onFilter: (value, record) => {
+      if (!value || value.length !== 2) return true
+      const recordDate = dayjs(record[dataIndex])
+      return recordDate.isAfter(value[0]) && recordDate.isBefore(value[1])
+    }
+  })
+
+  // Helper function for number range filter
+  const getNumberRangeFilterProps = (dataIndex, placeholder) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      <div style={{ padding: 8 }}>
+        <Space direction="vertical">
+          <Input
+            placeholder={`${placeholder} từ`}
+            type="number"
+            value={selectedKeys[0]?.min}
+            onChange={e => {
+              const newValue = { ...selectedKeys[0], min: e.target.value }
+              setSelectedKeys([newValue])
+            }}
+            style={{ width: 150 }}
+          />
+          <Input
+            placeholder={`${placeholder} đến`}
+            type="number"
+            value={selectedKeys[0]?.max}
+            onChange={e => {
+              const newValue = { ...selectedKeys[0], max: e.target.value }
+              setSelectedKeys([newValue])
+            }}
+            style={{ width: 150 }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              size="small"
+              style={{ width: 70 }}
+            >
+              Lọc
+            </Button>
+            <Button onClick={() => clearFilters()} size="small" style={{ width: 70 }}>
+              Xóa
+            </Button>
+          </Space>
+        </Space>
+      </div>
+    ),
+    filterIcon: filtered => <FilterOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+    onFilter: (value, record) => {
+      if (!value) return true
+      const recordValue = record[dataIndex]
+      const min = value.min ? parseFloat(value.min) : -Infinity
+      const max = value.max ? parseFloat(value.max) : Infinity
+      return recordValue >= min && recordValue <= max
+    }
+  })
+
   // Columns cho AR Confirmations
   const arColumns = [
     {
@@ -84,13 +215,15 @@ function GeneralDashboard({
       key: 'maAR',
       width: 120,
       fixed: 'left',
-      render: (text) => <strong style={{ color: '#10b981' }}>{text}</strong>
+      render: (text) => <strong style={{ color: '#10b981' }}>{text}</strong>,
+      ...getColumnSearchProps('maAR', 'mã AR')
     },
     {
       title: 'Khách hàng',
       dataIndex: 'customer',
       key: 'customer',
-      width: 200
+      width: 200,
+      ...getColumnSearchProps('customer', 'khách hàng')
     },
     {
       title: 'Số đơn',
@@ -106,7 +239,8 @@ function GeneralDashboard({
       key: 'amount',
       width: 150,
       align: 'right',
-      render: (value) => <strong>{formatCurrency(value)}</strong>
+      render: (value) => <strong>{formatCurrency(value)}</strong>,
+      ...getNumberRangeFilterProps('amount', 'Số tiền')
     },
     {
       title: 'Đã thu',
@@ -114,7 +248,8 @@ function GeneralDashboard({
       key: 'paidAmount',
       width: 150,
       align: 'right',
-      render: (value) => <span style={{ color: '#10b981' }}>{formatCurrency(value)}</span>
+      render: (value) => <span style={{ color: '#10b981' }}>{formatCurrency(value)}</span>,
+      ...getNumberRangeFilterProps('paidAmount', 'Số tiền')
     },
     {
       title: 'Tiến độ',
@@ -128,21 +263,25 @@ function GeneralDashboard({
           status={percent === 100 ? 'success' : percent > 0 ? 'active' : 'normal'}
           strokeColor={percent === 100 ? '#10b981' : '#3b82f6'}
         />
-      )
+      ),
+      sorter: (a, b) => a.paymentPercent - b.paymentPercent
     },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
       width: 150,
-      render: (status, record) => renderStatus(status, record.paymentPercent)
+      render: (status, record) => renderStatus(status, record.paymentPercent),
+      ...getStatusFilterProps()
     },
     {
       title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 120,
-      render: (date) => dayjs(date).format('DD/MM/YYYY')
+      render: (date) => dayjs(date).format('DD/MM/YYYY'),
+      ...getDateRangeFilterProps('createdAt'),
+      sorter: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix()
     }
   ]
 
@@ -154,13 +293,15 @@ function GeneralDashboard({
       key: 'maPP',
       width: 120,
       fixed: 'left',
-      render: (text) => <strong style={{ color: '#3b82f6' }}>{text}</strong>
+      render: (text) => <strong style={{ color: '#3b82f6' }}>{text}</strong>,
+      ...getColumnSearchProps('maPP', 'mã PP')
     },
     {
       title: 'Nhà cung cấp',
       dataIndex: 'supplier',
       key: 'supplier',
-      width: 200
+      width: 200,
+      ...getColumnSearchProps('supplier', 'nhà cung cấp')
     },
     {
       title: 'Số đơn',
@@ -176,7 +317,8 @@ function GeneralDashboard({
       key: 'amount',
       width: 150,
       align: 'right',
-      render: (value) => <strong>{formatCurrency(value)}</strong>
+      render: (value) => <strong>{formatCurrency(value)}</strong>,
+      ...getNumberRangeFilterProps('amount', 'Số tiền')
     },
     {
       title: 'Đã chi',
@@ -184,7 +326,8 @@ function GeneralDashboard({
       key: 'paidAmount',
       width: 150,
       align: 'right',
-      render: (value) => <span style={{ color: '#3b82f6' }}>{formatCurrency(value)}</span>
+      render: (value) => <span style={{ color: '#3b82f6' }}>{formatCurrency(value)}</span>,
+      ...getNumberRangeFilterProps('paidAmount', 'Số tiền')
     },
     {
       title: 'Tiến độ',
@@ -198,21 +341,25 @@ function GeneralDashboard({
           status={percent === 100 ? 'success' : percent > 0 ? 'active' : 'normal'}
           strokeColor={percent === 100 ? '#10b981' : '#f59e0b'}
         />
-      )
+      ),
+      sorter: (a, b) => a.paymentPercent - b.paymentPercent
     },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
       width: 150,
-      render: (status, record) => renderStatus(status, record.paymentPercent)
+      render: (status, record) => renderStatus(status, record.paymentPercent),
+      ...getStatusFilterProps()
     },
     {
       title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 120,
-      render: (date) => dayjs(date).format('DD/MM/YYYY')
+      render: (date) => dayjs(date).format('DD/MM/YYYY'),
+      ...getDateRangeFilterProps('createdAt'),
+      sorter: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix()
     }
   ]
 
@@ -223,7 +370,8 @@ function GeneralDashboard({
       dataIndex: 'maPhieu',
       key: 'maPhieu',
       width: 120,
-      render: (text) => <strong style={{ color: '#10b981' }}>{text}</strong>
+      render: (text) => <strong style={{ color: '#10b981' }}>{text}</strong>,
+      ...getColumnSearchProps('maPhieu', 'mã phiếu')
     },
     {
       title: 'Số tiền',
@@ -231,7 +379,9 @@ function GeneralDashboard({
       key: 'soTien',
       width: 150,
       align: 'right',
-      render: (value) => <strong>{formatCurrency(value)}</strong>
+      render: (value) => <strong>{formatCurrency(value)}</strong>,
+      ...getNumberRangeFilterProps('soTien', 'Số tiền'),
+      sorter: (a, b) => a.soTien - b.soTien
     },
     {
       title: 'Phương thức',
@@ -242,14 +392,20 @@ function GeneralDashboard({
         <Tag color={method === 'TIEN_MAT' ? 'green' : 'blue'}>
           {method === 'TIEN_MAT' ? 'Tiền mặt' : 'Chuyển khoản'}
         </Tag>
-      )
+      ),
+      filters: [
+        { text: 'Tiền mặt', value: 'TIEN_MAT' },
+        { text: 'Chuyển khoản', value: 'CHUYEN_KHOAN' },
+      ],
+      onFilter: (value, record) => record.phuongThuc === value
     },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
       width: 150,
-      render: (status) => renderStatus(status)
+      render: (status) => renderStatus(status),
+      ...getStatusFilterProps()
     },
     {
       title: 'Hình ảnh',
@@ -262,14 +418,21 @@ function GeneralDashboard({
           <Button type="link" icon={<PictureOutlined />} size="small">Xem</Button>
         ) : (
           <span style={{ color: '#999' }}>-</span>
-        )
+        ),
+      filters: [
+        { text: 'Có hình ảnh', value: true },
+        { text: 'Không có hình ảnh', value: false },
+      ],
+      onFilter: (value, record) => record.hasImage === value
     },
     {
       title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 120,
-      render: (date) => dayjs(date).format('DD/MM/YYYY HH:mm')
+      render: (date) => dayjs(date).format('DD/MM/YYYY HH:mm'),
+      ...getDateRangeFilterProps('createdAt'),
+      sorter: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix()
     }
   ]
 
@@ -280,7 +443,8 @@ function GeneralDashboard({
       dataIndex: 'maPhieu',
       key: 'maPhieu',
       width: 120,
-      render: (text) => <strong style={{ color: '#3b82f6' }}>{text}</strong>
+      render: (text) => <strong style={{ color: '#3b82f6' }}>{text}</strong>,
+      ...getColumnSearchProps('maPhieu', 'mã phiếu')
     },
     {
       title: 'Số tiền',
@@ -288,7 +452,9 @@ function GeneralDashboard({
       key: 'soTien',
       width: 150,
       align: 'right',
-      render: (value) => <strong>{formatCurrency(value)}</strong>
+      render: (value) => <strong>{formatCurrency(value)}</strong>,
+      ...getNumberRangeFilterProps('soTien', 'Số tiền'),
+      sorter: (a, b) => a.soTien - b.soTien
     },
     {
       title: 'Phương thức',
@@ -299,14 +465,20 @@ function GeneralDashboard({
         <Tag color={method === 'TIEN_MAT' ? 'green' : 'blue'}>
           {method === 'TIEN_MAT' ? 'Tiền mặt' : 'Chuyển khoản'}
         </Tag>
-      )
+      ),
+      filters: [
+        { text: 'Tiền mặt', value: 'TIEN_MAT' },
+        { text: 'Chuyển khoản', value: 'CHUYEN_KHOAN' },
+      ],
+      onFilter: (value, record) => record.phuongThuc === value
     },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
       width: 150,
-      render: (status) => renderStatus(status)
+      render: (status) => renderStatus(status),
+      ...getStatusFilterProps()
     },
     {
       title: 'Hình ảnh',
@@ -321,14 +493,27 @@ function GeneralDashboard({
           <Button type="link" icon={<PictureOutlined />} size="small">Xem</Button>
         ) : (
           <span style={{ color: '#999' }}>-</span>
-        )
+        ),
+      filters: [
+        { text: 'Cần hình ảnh', value: 'needs' },
+        { text: 'Có hình ảnh', value: 'has' },
+        { text: 'Không cần', value: 'none' },
+      ],
+      onFilter: (value, record) => {
+        if (value === 'needs') return record.needsImage
+        if (value === 'has') return record.hasImage
+        if (value === 'none') return !record.needsImage && !record.hasImage
+        return true
+      }
     },
     {
       title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 120,
-      render: (date) => dayjs(date).format('DD/MM/YYYY HH:mm')
+      render: (date) => dayjs(date).format('DD/MM/YYYY HH:mm'),
+      ...getDateRangeFilterProps('createdAt'),
+      sorter: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix()
     }
   ]
 

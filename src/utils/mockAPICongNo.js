@@ -675,17 +675,21 @@ export const mockAPI = {
     
     return mockARDocuments.map(ar => {
       const relatedOrders = mockSalesOrders.filter(so => so.arDocumentId === ar.id)
+      const totalAmount = ar.totalAmount || 0
+      const paidAmount = ar.paidAmount || 0
       return {
         ...ar,
+        maAR: ar.maChungTu,
+        amount: totalAmount,
         customer: relatedOrders[0]?.customer || 'N/A',
         orderCount: relatedOrders.length,
-        paidAmount: ar.paidAmount || 0,
-        remainingAmount: ar.amount - (ar.paidAmount || 0),
-        paymentPercent: ar.paidAmount ? Math.round((ar.paidAmount / ar.amount) * 100) : 0,
+        paidAmount: paidAmount,
+        remainingAmount: totalAmount - paidAmount,
+        paymentPercent: totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0,
         createdAt: ar.createdAt || '2026-01-01T10:00:00',
         statusDisplay: ar.status === 'MOI' ? 'MỚI'
           : ar.status === 'CHO_THU_TIEN' ? 'CHỜ THU TIỀN'
-          : ar.status === 'PARTIAL' ? `ĐÃ THU ${Math.round((ar.paidAmount / ar.amount) * 100)}%`
+          : ar.status === 'PARTIAL' ? `ĐÃ THU ${Math.round((paidAmount / totalAmount) * 100)}%`
           : 'ĐÃ THANH TOÁN'
       }
     })
@@ -697,17 +701,21 @@ export const mockAPI = {
     
     return mockPaymentProposals.map(pp => {
       const relatedOrders = mockPurchaseOrders.filter(po => po.paymentProposalId === pp.id)
+      const totalAmount = pp.totalAmount || 0
+      const paidAmount = pp.paidAmount || 0
       return {
         ...pp,
+        maPP: pp.maDeXuat,
+        amount: totalAmount,
         supplier: relatedOrders[0]?.supplier || 'N/A',
         orderCount: relatedOrders.length,
-        paidAmount: pp.paidAmount || 0,
-        remainingAmount: pp.amount - (pp.paidAmount || 0),
-        paymentPercent: pp.paidAmount ? Math.round((pp.paidAmount / pp.amount) * 100) : 0,
+        paidAmount: paidAmount,
+        remainingAmount: totalAmount - paidAmount,
+        paymentPercent: totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0,
         createdAt: pp.createdAt || '2026-01-01T10:00:00',
         statusDisplay: pp.status === 'MOI' ? 'MỚI'
           : pp.status === 'CHO_THANH_TOAN' ? 'CHỜ THANH TOÁN'
-          : pp.status === 'PARTIAL' ? `ĐÃ CHI ${Math.round((pp.paidAmount / pp.amount) * 100)}%`
+          : pp.status === 'PARTIAL' ? `ĐÃ CHI ${Math.round((paidAmount / totalAmount) * 100)}%`
           : 'ĐÃ THANH TOÁN'
       }
     })
