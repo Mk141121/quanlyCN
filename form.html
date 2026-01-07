@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tạo phiếu thu chi mới</title>
+  <link rel="stylesheet" href="thu-chi.css" />
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+
+      <!-- Header -->
+      <div class="header">
+        <button class="btn-back">←</button>
+        <h2>Tạo phiếu thu chi mới</h2>
+      </div>
+
+      <!-- Form -->
+      <form class="form">
+
+        <!-- Row 1 -->
+        <div class="row">
+          <div class="field">
+            <label>Loại phiếu <span>*</span></label>
+            <div class="toggle">
+              <button type="button" class="active">⬇ Phiếu thu</button>
+              <button type="button">⬆ Phiếu chi</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Số tiền <span>*</span></label>
+            <div class="amount">
+              <input type="number" value="0" />
+              <span>VND</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="row">
+          <div class="field">
+            <label>Đối tượng <span>*</span></label>
+            <select>
+              <option>Khách hàng</option>
+              <option>Nhà cung cấp</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Tìm khách hàng</label>
+            <input type="text" placeholder="Nhập tên hoặc mã khách hàng" />
+          </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="row">
+          <div class="field">
+            <label>Phương thức thanh toán</label>
+            <select>
+              <option>Tiền mặt</option>
+              <option>Chuyển khoản</option>
+            </select>
+          </div>
+
+          <div class="field checkbox">
+            <label>Hóa đơn</label>
+            <label class="inline">
+              <input type="checkbox" />
+              Có hóa đơn
+            </label>
+          </div>
+        </div>
+
+        <!-- Lý do -->
+        <div class="field">
+          <label>Lý do</label>
+          <input type="text" placeholder="Lý do thu/chi" />
+        </div>
+
+        <!-- Ghi chú -->
+        <div class="field">
+          <label>Ghi chú</label>
+          <textarea placeholder="Ghi chú thêm..."></textarea>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+          <button type="button" class="btn cancel">✕ Hủy</button>
+          <button type="submit" class="btn primary">💾 Tạo mới</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+.order-grouper-container {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.order-grouper-card {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+}
+
+.grouper-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.grouper-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.partner-section {
+  background: #fafafa;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.info-box {
+  margin-top: 24px;
+  padding: 16px;
+  background: #e6f7ff;
+  border-left: 4px solid #1890ff;
+  border-radius: 4px;
+}
+
+.info-box h4 {
+  margin-top: 0;
+  color: #1890ff;
+}
+
+.info-box ul {
+  margin-bottom: 0;
+  padding-left: 20px;
+}
+
+.info-box li {
+  margin-bottom: 8px;
+  color: #595959;
+}

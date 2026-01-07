@@ -1,0 +1,32 @@
+.receipt-payment-list-container {
+  width: 100%;
+  max-width: 1400px;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.list-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.list-filters {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.receipt-payment-table .ant-table-row {
+  cursor: pointer;
+}
+
+.receipt-payment-table .ant-table-row:hover {
+  background: #f5f5f5;
+}
