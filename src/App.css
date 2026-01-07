@@ -1,34 +1,570 @@
-body {
+/* ============================================
+   PREMIUM ERP DESIGN SYSTEM - NAVY THEME
+   Inspired by Modern Tax Calculator UI
+   ============================================ */
+
+:root {
+  /* Navy Theme Colors */
+  --navy-darker: #1a2332;
+  --navy-dark: #243447;
+  --navy-base: #2c3e5a;
+  --navy-light: #384a68;
+  --navy-lighter: #4a5f80;
+  
+  /* Background Layers */
+  --bg-app: linear-gradient(135deg, #1a2332 0%, #243447 100%);
+  --bg-card: #2c3e5a;
+  --bg-card-hover: #384a68;
+  --bg-input: #1a2332;
+  
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  /* Accent Colors */
+  --accent-blue: #3b82f6;
+  --accent-blue-light: #60a5fa;
+  --accent-cyan: #06b6d4;
+  --accent-green: #10b981;
+  --accent-emerald: #34d399;
+  --accent-orange: #f59e0b;
+  --accent-amber: #fbbf24;
+  
+  /* Shadows & Effects */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --shadow-glow-blue: 0 0 20px rgba(59, 130, 246, 0.3);
+  --shadow-glow-green: 0 0 20px rgba(16, 185, 129, 0.3);
+  
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+/* Light Mode Override */
+.light-mode {
+  --bg-app: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-input: #f1f5f9;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+* {
   margin: 0;
   padding: 0;
-  background: #f5f7fb;
+  box-sizing: border-box;
+}
+
+body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: var(--text-primary);
 }
 
 .app {
   min-height: 100vh;
-  padding: 40px 20px;
+  background: var(--bg-app);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   HOME CONTAINER
+   ============================================ */
+.home-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 24px;
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.home-header {
+  margin-bottom: 32px;
+  padding: 28px 36px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.home-header:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.header-content {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.main-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: block;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: flex-start;
 }
 
-.home-menu {
-  width: 100%;
-  max-width: 600px;
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: rotate(180deg) scale(1.1);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+/* ============================================
+   MAIN CONTENT - 2 COLUMN LAYOUT
+   ============================================ */
+.home-content {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Column Headers */
+.column-header {
+  padding: 24px 28px;
+  border-radius: var(--radius-lg);
   text-align: center;
-  padding: 60px 40px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.home-menu h1 {
-  font-size: 32px;
-  margin-bottom: 40px;
-  color: #1890ff;
+.column-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  to { left: 100%; }
+}
+
+.column-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.3px;
+}
+
+/* AR Column - Modern Emerald Theme */
+.ar-column .column-header {
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  color: white;
+}
+
+.ar-column .subtitle {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* AP Column - Modern Blue Theme */
+.ap-column .column-header {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+}
+
+.ap-column .subtitle {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover {
+  background: var(--bg-card-hover);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+/* Card Animation - Staggered Entrance */
+.card {
+  animation: slideUp 0.5s ease-out backwards;
+}
+
+.card:nth-child(2) { animation-delay: 0.1s; }
+.card:nth-child(3) { animation-delay: 0.2s; }
+.card:nth-child(4) { animation-delay: 0.3s; }
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card Header with Icon */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.card-icon {
+  font-size: 1.75rem;
+  color: var(--accent-blue);
+  opacity: 0.9;
+}
+
+.card-ar .card-icon {
+  color: var(--accent-green);
+}
+
+.card-ap .card-icon {
+  color: var(--accent-blue);
+}
+
+.card-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.action-btn {
+  height: auto !important;
+  min-height: 56px;
+  padding: 16px 24px !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-md) !important;
+  border: none !important;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  text-align: center;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.action-btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-subtitle {
+  font-size: 0.75rem;
+  font-weight: 400;
+  opacity: 0.85;
+  letter-spacing: 0.3px;
+}
+
+/* AR Buttons - Modern Emerald Theme */
+.ar-btn {
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%) !important;
+  color: white !important;
+}
+
+.ar-btn:hover {
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+  box-shadow: 0 0 24px rgba(20, 184, 166, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+.ar-btn:active {
+  transform: translateY(0) !important;
+}
+
+/* AP Buttons - Modern Blue Theme */
+.ap-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  color: white !important;
+}
+
+.ap-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+  box-shadow: 0 0 24px rgba(37, 99, 235, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+.ap-btn:active {
+  transform: translateY(0) !important;
+}
+
+/* Dashboard Button - Outlined Style */
+.dashboard-btn {
+  background: transparent !important;
+  border: 2px solid currentColor !important;
+  color: var(--text-primary) !important;
+}
+
+.ar-column .dashboard-btn {
+  color: #14b8a6 !important;
+  border-color: #14b8a6 !important;
+}
+
+.ar-column .dashboard-btn:hover {
+  background: rgba(20, 184, 166, 0.1) !important;
+  box-shadow: 0 0 20px rgba(20, 184, 166, 0.3) !important;
+}
+
+.ap-column .dashboard-btn {
+  color: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+.ap-column .dashboard-btn:hover {
+  background: rgba(37, 99, 235, 0.1) !important;
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.3) !important;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+/* Tablet - 1024px */
+@media (max-width: 1024px) {
+  .home-container {
+    padding: 20px;
+  }
+  
+  .main-title {
+    font-size: 1.875rem;
+  }
+  
+  .column-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .home-content {
+    gap: 20px;
+  }
+  
+  .card {
+    padding: 20px;
+  }
+}
+
+/* Mobile Landscape - 768px */
+@media (max-width: 768px) {
+  .home-content {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+  
+  .main-title {
+    font-size: 1.625rem;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .home-header {
+    padding: 24px;
+  }
+}
+
+/* Mobile Portrait - 480px */
+@media (max-width: 480px) {
+  .home-container {
+    padding: 16px;
+  }
+  
+  .home-header {
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  
+  .main-title {
+    font-size: 1.375rem;
+  }
+  
+  .column-header {
+    padding: 20px;
+  }
+  
+  .column-header h2 {
+    font-size: 1.25rem;
+  }
+  
+  .card {
+    padding: 18px;
+  }
+  
+  .action-btn {
+    min-height: 52px;
+    padding: 14px 20px !important;
+    font-size: 0.9375rem !important;
+  }
+  
+  .theme-toggle {
+    width: 44px;
+    height: 44px;
+    font-size: 1.25rem;
+  }
+}
+
+/* ============================================
+   ANT DESIGN OVERRIDES
+   ============================================ */
+.ant-btn-icon {
+  font-size: 1.25rem !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--navy-darker);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--navy-light);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--navy-lighter);
+}
+
+/* Selection */
+::selection {
+  background: var(--accent-blue);
+  color: white;
+}
+
+/* ============================================
+   UTILITIES
+   ============================================ */
+.text-gradient-ar {
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-ap {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

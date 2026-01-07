@@ -623,5 +623,126 @@ export const mockAPI = {
       }))
 
     return orders
+  },
+
+  // ============= DASHBOARD TỔNG HỢP APIs =============
+  
+  // Lấy báo cáo tổng hợp (Summary Reports)
+  getSummaryReports: async () => {
+    await delay(300)
+    
+    // Tính Công nợ Khách hàng (AR)
+    const salesTotal = mockSalesOrders
+      .filter(so => so.status === 'DA_DOI_CHIEU' || so.status === 'CHO_THU_TIEN' || so.status === 'DA_THANH_TOAN')
+      .reduce((sum, so) => sum + so.amount, 0)
+    
+    const arReceived = mockARDocuments
+      .filter(ar => ar.status === 'DA_THANH_TOAN')
+      .reduce((sum, ar) => sum + (ar.paidAmount || ar.amount), 0)
+    
+    const arPending = salesTotal - arReceived
+
+    // Tính Công nợ Nhà cung cấp (AP)
+    const purchasesTotal = mockPurchaseOrders
+      .filter(po => po.status === 'DA_DOI_CHIEU' || po.status === 'CHO_THANH_TOAN' || po.status === 'DA_THANH_TOAN')
+      .reduce((sum, po) => sum + po.amount, 0)
+    
+    const apPaid = mockPaymentProposals
+      .filter(pp => pp.status === 'DA_THANH_TOAN')
+      .reduce((sum, pp) => sum + (pp.paidAmount || pp.amount), 0)
+    
+    const apPending = purchasesTotal - apPaid
+
+    return {
+      customer_ar: {
+        sales: salesTotal,
+        received: arReceived,
+        pending: arPending,
+        receivedPercent: salesTotal > 0 ? Math.round((arReceived / salesTotal) * 100) : 0
+      },
+      supplier_ap: {
+        purchases: purchasesTotal,
+        paid: apPaid,
+        pending: apPending,
+        paidPercent: purchasesTotal > 0 ? Math.round((apPaid / purchasesTotal) * 100) : 0
+      }
+    }
+  },
+
+  // Lấy danh sách AR Documents để xác nhận
+  getARConfirmations: async () => {
+    await delay(300)
+    
+    return mockARDocuments.map(ar => {
+      const relatedOrders = mockSalesOrders.filter(so => so.arDocumentId === ar.id)
+      return {
+        ...ar,
+        customer: relatedOrders[0]?.customer || 'N/A',
+        orderCount: relatedOrders.length,
+        paidAmount: ar.paidAmount || 0,
+        remainingAmount: ar.amount - (ar.paidAmount || 0),
+        paymentPercent: ar.paidAmount ? Math.round((ar.paidAmount / ar.amount) * 100) : 0,
+        createdAt: ar.createdAt || '2026-01-01T10:00:00',
+        statusDisplay: ar.status === 'MOI' ? 'MỚI'
+          : ar.status === 'CHO_THU_TIEN' ? 'CHỜ THU TIỀN'
+          : ar.status === 'PARTIAL' ? `ĐÃ THU ${Math.round((ar.paidAmount / ar.amount) * 100)}%`
+          : 'ĐÃ THANH TOÁN'
+      }
+    })
+  },
+
+  // Lấy danh sách Payment Proposals để xác nhận
+  getAPConfirmations: async () => {
+    await delay(300)
+    
+    return mockPaymentProposals.map(pp => {
+      const relatedOrders = mockPurchaseOrders.filter(po => po.paymentProposalId === pp.id)
+      return {
+        ...pp,
+        supplier: relatedOrders[0]?.supplier || 'N/A',
+        orderCount: relatedOrders.length,
+        paidAmount: pp.paidAmount || 0,
+        remainingAmount: pp.amount - (pp.paidAmount || 0),
+        paymentPercent: pp.paidAmount ? Math.round((pp.paidAmount / pp.amount) * 100) : 0,
+        createdAt: pp.createdAt || '2026-01-01T10:00:00',
+        statusDisplay: pp.status === 'MOI' ? 'MỚI'
+          : pp.status === 'CHO_THANH_TOAN' ? 'CHỜ THANH TOÁN'
+          : pp.status === 'PARTIAL' ? `ĐÃ CHI ${Math.round((pp.paidAmount / pp.amount) * 100)}%`
+          : 'ĐÃ THANH TOÁN'
+      }
+    })
+  },
+
+  // Lấy danh sách Phiếu Thu gần đây
+  getRecentReceipts: async (params = {}) => {
+    await delay(300)
+    const { limit = 10, fromDate, toDate } = params
+    
+    return mockPhieuThuChi
+      .filter(p => p.loaiPhieu === 'THU')
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, limit)
+      .map(p => ({
+        ...p,
+        statusDisplay: p.status === 'DA_THANH_TOAN' ? 'ĐÃ THANH TOÁN' : 'CHỜ THANH TOÁN',
+        hasImage: !!p.billImage
+      }))
+  },
+
+  // Lấy danh sách Phiếu Chi gần đây
+  getRecentPayments: async (params = {}) => {
+    await delay(300)
+    const { limit = 10, fromDate, toDate } = params
+    
+    return mockPhieuThuChi
+      .filter(p => p.loaiPhieu === 'CHI')
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, limit)
+      .map(p => ({
+        ...p,
+        statusDisplay: p.status === 'DA_THANH_TOAN' ? 'ĐÃ THANH TOÁN' : 'CHỜ THANH TOÁN',
+        hasImage: !!p.billImage,
+        needsImage: p.phuongThuc === 'CHUYEN_KHOAN' && !p.billImage
+      }))
   }
 }
