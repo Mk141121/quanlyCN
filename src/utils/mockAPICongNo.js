@@ -3,6 +3,9 @@
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
+// Polyfill for window in Node.js environment
+const globalStore = typeof window !== 'undefined' ? window : global
+
 // ============= CUSTOMER GROUPS (Nhóm khách hàng) =============
 export const mockCustomerGroups = [
   { id: "cg-001", name: "Tập đoàn WinCommerce", description: "Hệ thống siêu thị WinMart" },
@@ -1074,10 +1077,10 @@ export const mockAPI = {
     })
     
     // Store in memory (would be database in real app)
-    if (!window.mockProposals) {
-      window.mockProposals = []
+    if (!globalStore.mockProposals) {
+      globalStore.mockProposals = []
     }
-    window.mockProposals.push(newProposal)
+    globalStore.mockProposals.push(newProposal)
     
     return newProposal
   },
@@ -1086,11 +1089,11 @@ export const mockAPI = {
   getPaymentProposalList: async (statusFilter = null) => {
     await delay(300)
     
-    if (!window.mockProposals) {
-      window.mockProposals = []
+    if (!globalStore.mockProposals) {
+      globalStore.mockProposals = []
     }
     
-    let proposals = window.mockProposals
+    let proposals = globalStore.mockProposals
     
     if (statusFilter) {
       proposals = proposals.filter(p => p.status === statusFilter)
@@ -1103,11 +1106,11 @@ export const mockAPI = {
   getPaymentProposalDetail: async (proposalId) => {
     await delay(300)
     
-    if (!window.mockProposals) {
-      window.mockProposals = []
+    if (!globalStore.mockProposals) {
+      globalStore.mockProposals = []
     }
     
-    const proposal = window.mockProposals.find(p => p.id === proposalId)
+    const proposal = globalStore.mockProposals.find(p => p.id === proposalId)
     
     if (!proposal) {
       throw new Error('Không tìm thấy đề xuất')
@@ -1129,11 +1132,11 @@ export const mockAPI = {
   approvePaymentProposal: async (proposalId, selectedSupplierIds = []) => {
     await delay(800)
     
-    if (!window.mockProposals) {
-      window.mockProposals = []
+    if (!globalStore.mockProposals) {
+      globalStore.mockProposals = []
     }
     
-    const proposal = window.mockProposals.find(p => p.id === proposalId)
+    const proposal = globalStore.mockProposals.find(p => p.id === proposalId)
     
     if (!proposal) {
       throw new Error('Không tìm thấy đề xuất')
@@ -1225,11 +1228,11 @@ export const mockAPI = {
   rejectPaymentProposal: async (proposalId, reason) => {
     await delay(500)
     
-    if (!window.mockProposals) {
-      window.mockProposals = []
+    if (!globalStore.mockProposals) {
+      globalStore.mockProposals = []
     }
     
-    const proposal = window.mockProposals.find(p => p.id === proposalId)
+    const proposal = globalStore.mockProposals.find(p => p.id === proposalId)
     
     if (!proposal) {
       throw new Error('Không tìm thấy đề xuất')
