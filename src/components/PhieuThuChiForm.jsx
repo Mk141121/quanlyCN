@@ -118,7 +118,24 @@ const PhieuThuChiForm = ({ refId, refType, loaiPhieuProp, isViewOnly = false, is
       } else if (refType === 'PaymentProposal') {
         data = await mockAPI.getPaymentProposalById(refId)
       } else {
-        data = await mockAPI.getARDocumentById(refId)
+        // Load AR Document với SO items
+        const arDoc = await mockAPI.getARDocumentById(refId)
+        
+        // Transform items nếu cần (đảm bảo format đúng)
+        const soItems = (arDoc.items || []).map(item => ({
+          id: item.id,
+          maDon: item.maDon,
+          customer: item.customer || arDoc.customer,
+          createdDate: item.createdDate,
+          amount: item.amount || 0,
+          description: item.description || `Đơn hàng ${item.maDon}`,
+          soStatus: item.soStatus
+        }))
+        
+        data = {
+          ...arDoc,
+          items: soItems
+        }
       }
       setDocumentData(data)
       // Auto-fill số tiền còn nợ
@@ -158,25 +175,14 @@ const PhieuThuChiForm = ({ refId, refType, loaiPhieuProp, isViewOnly = false, is
       render: (date) => date ? dayjs(date).format('DD/MM/YYYY') : '-'
     },
     {
-      title: 'Số tiền',
+      title: 'Số tiền (VNĐ)',
       dataIndex: 'amount',
       key: 'amount',
       width: 150,
       align: 'right',
       render: (amount) => (
         <span style={{ fontSize: 16, fontWeight: 500 }}>
-          {amount.toLocaleString()} VND
-        </span>
-      )
-    },
-    {
-      title: 'Chi tiết đơn hàng',
-      dataIndex: 'description',
-      key: 'description',
-      ellipsis: true,
-      render: (text, record) => (
-        <span style={{ color: '#666' }}>
-          {text || record.details || `Đơn hàng ${record.maDon}` || '-'}
+          {(amount || 0).toLocaleString()}
         </span>
       )
     },

@@ -328,7 +328,7 @@ export const mockAPI = {
     }
   },
 
-  // Xác nhận Công nợ Khách hàng (Chỉ cập nhật trạng thái SO)
+  // Xác nhận Công nợ Khách hàng - Tạo AR Document (Không cần duyệt - trực tiếp CHO_THU_TIEN)
   confirmARDebt: async (data) => {
     await delay(500)
 
@@ -342,22 +342,43 @@ export const mockAPI = {
       throw new Error(`Tổng tiền không khớp! SO: ${totalSO}, Input: ${data.totalAmount}`)
     }
 
-    // Cập nhật SO - chỉ thay đổi trạng thái
+    // Tạo AR Document mới (tương tự Payment Proposal cho AP, nhưng không cần duyệt)
+    const newAR = {
+      id: `ar-${Date.now()}`,
+      maChungTu: `AR-2026-${String(mockARDocuments.length + 1).padStart(3, '0')}`,
+      customer: data.customer,
+      customerId: data.customerId,
+      totalAmount: data.totalAmount,
+      paidAmount: 0,  // Chưa thu tiền
+      status: 'CHO_THU_TIEN',  // Trực tiếp chờ thu tiền (không cần duyệt)
+      createdAt: new Date().toISOString(),
+      soIds: data.soIds,  // Lưu lại danh sách SO IDs
+      items: data.soIds.map(soId => {
+        const so = mockSalesOrders.find(s => s.id === soId)
+        return {
+          id: soId,
+          maDon: so?.maDon,
+          customer: so?.customer,
+          amount: so?.amount || 0,
+          description: so?.description || '',
+          createdDate: so?.createdDate,
+          soStatus: 'CHO_THU_TIEN'
+        }
+      })
+    }
+
+    // Cập nhật SO - thay đổi trạng thái
     data.soIds.forEach(soId => {
       const so = mockSalesOrders.find(s => s.id === soId)
       if (so) {
         so.status = 'DA_DOI_CHIEU'  // Đã đối chiếu
+        so.arDocumentId = newAR.id   // Link tới AR Document
       }
     })
 
-    return {
-      success: true,
-      message: `Đã xác nhận công nợ cho ${data.soIds.length} đơn hàng`,
-      soIds: data.soIds,
-      totalAmount: data.totalAmount,
-      customer: data.customer,
-      customerId: data.customerId
-    }
+    mockARDocuments.push(newAR)
+
+    return newAR
   },
 
   // Tạo Payment Proposal (Gom PO)

@@ -257,7 +257,7 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
       title: 'Mã chứng từ',
       dataIndex: 'code',
       key: 'code',
-      width: 180,
+      width: 140,
       render: (text) => (
         <Tag color="blue" style={{ fontSize: 14 }}>
           {text}
@@ -269,8 +269,12 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
       title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 160,
-      render: (date) => date ? new Date(date).toLocaleString('vi-VN') : '-',
+      width: 140,
+      render: (date) => {
+        if (!date) return '-'
+        const d = new Date(date)
+        return `${d.toLocaleDateString('vi-VN')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
+      },
       ...getDateRangeFilterProps('createdAt'),
       sorter: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix()
     },
@@ -278,28 +282,27 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
       title: 'Đối tượng',
       dataIndex: 'partner',
       key: 'partner',
-      ellipsis: true,
       ...getColumnSearchProps('partner', 'đối tượng')
     },
     {
-      title: 'Số tiền',
+      title: 'Số tiền (VNĐ)',
       dataIndex: 'amount',
       key: 'amount',
-      width: 180,
+      width: 140,
       align: 'right',
       render: (amount) => (
-        <strong style={{ fontSize: 16, color: '#1890ff' }}>
-          {(amount || 0).toLocaleString()} VND
+        <strong style={{ fontSize: 15, color: '#1890ff' }}>
+          {(amount || 0).toLocaleString()}
         </strong>
       ),
       ...getNumberRangeFilterProps('amount', 'Số tiền'),
       sorter: (a, b) => (a.amount || 0) - (b.amount || 0)
     },
     {
-      title: 'Số đơn hàng',
+      title: 'Số đơn',
       dataIndex: 'itemCount',
       key: 'itemCount',
-      width: 120,
+      width: 80,
       align: 'center',
       render: (count) => (
         <Tag color="cyan">{count} đơn</Tag>
@@ -309,7 +312,7 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
     {
       title: 'Trạng thái',
       key: 'status',
-      width: 150,
+      width: 120,
       render: (_, record) => {
         const paymentStatus = getPaymentStatus(record)
         return (
@@ -323,7 +326,7 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
     {
       title: 'Thao tác',
       key: 'action',
-      width: 140,
+      width: 100,
       fixed: 'right',
       render: (_, record) => {
         const isCompleted = record.status === 'DA_THANH_TOAN' || record.status === 'DA_THU_TIEN'

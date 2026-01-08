@@ -283,42 +283,72 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
       // Tự động xác định partner từ các đơn đã chọn - dùng allOrders thay vì availableOrders
       const selectedOrders = allOrders.filter(order => selectedOrderIds.includes(order.id))
       
-      // Lấy partner info: Ưu tiên selectedPartner -> selectedGroup -> từ đơn hàng đầu tiên
-      let partnerInfo
-      if (selectedPartner) {
-        partnerInfo = selectedPartner
-      } else if (selectedGroup) {
-        partnerInfo = {
-          id: selectedGroup,
-          name: groups.find(g => g.id === selectedGroup)?.name || 'Unknown Group'
-        }
-      } else if (selectedOrders.length > 0) {
-        // Lấy thông tin từ đơn hàng đầu tiên
-        const firstOrder = selectedOrders[0]
-        partnerInfo = {
-          id: type === 'AP' ? firstOrder.supplierId : firstOrder.customerId,
-          name: type === 'AP' ? firstOrder.supplier : firstOrder.customer
-        }
-      } else {
-        message.error('Không xác định được thông tin đối tác!')
-        return
-      }
-
-      const payload = {
-        [type === 'AP' ? 'supplierId' : 'customerId']: partnerInfo.id,
-        [type === 'AP' ? 'supplier' : 'customer']: partnerInfo.name,
-        [type === 'AP' ? 'poIds' : 'soIds']: selectedOrderIds,
-        totalAmount: totalSelected,
-        isGroupLevel: !selectedPartner // Flag để phân biệt group level vs partner level
-      }
-
-      let result
       if (type === 'AP') {
-        result = await mockAPI.confirmAPDebt(payload)
+        // AP: Gom tất cả PO vào 1 Payment Proposal (vì NCC thường là 1)
+        let partnerInfo
+        if (selectedPartner) {
+          partnerInfo = selectedPartner
+        } else if (selectedGroup) {
+          partnerInfo = {
+            id: selectedGroup,
+            name: groups.find(g => g.id === selectedGroup)?.name || 'Unknown Group'
+          }
+        } else if (selectedOrders.length > 0) {
+          const firstOrder = selectedOrders[0]
+          partnerInfo = {
+            id: firstOrder.supplierId,
+            name: firstOrder.supplier
+          }
+        } else {
+          message.error('Không xác định được thông tin đối tác!')
+          return
+        }
+
+        const payload = {
+          supplierId: partnerInfo.id,
+          supplier: partnerInfo.name,
+          poIds: selectedOrderIds,
+          totalAmount: totalSelected,
+          isGroupLevel: !selectedPartner
+        }
+
+        const result = await mockAPI.confirmAPDebt(payload)
         message.success(`✅ Xác nhận công nợ thành công cho ${result.poIds.length} đơn hàng!`)
       } else {
-        result = await mockAPI.confirmARDebt(payload)
-        message.success(`✅ Xác nhận công nợ thành công cho ${result.soIds.length} đơn hàng!`)
+        // AR: Tách riêng từng khách hàng - mỗi khách hàng 1 Phiếu Thu
+        // Group SO theo customerId
+        const soByCustomer = {}
+        selectedOrders.forEach(order => {
+          const custId = order.customerId
+          if (!soByCustomer[custId]) {
+            soByCustomer[custId] = {
+              customerId: custId,
+              customer: order.customer,
+              soIds: [],
+              totalAmount: 0
+            }
+          }
+          soByCustomer[custId].soIds.push(order.id)
+          soByCustomer[custId].totalAmount += order.amount
+        })
+
+        // Tạo AR Document cho từng khách hàng
+        const customerGroups = Object.values(soByCustomer)
+        let createdCount = 0
+        
+        for (const group of customerGroups) {
+          const payload = {
+            customerId: group.customerId,
+            customer: group.customer,
+            soIds: group.soIds,
+            totalAmount: group.totalAmount
+          }
+          
+          await mockAPI.confirmARDebt(payload)
+          createdCount++
+        }
+        
+        message.success(`✅ Đã tạo ${createdCount} Phiếu Thu cho ${selectedOrders.length} đơn hàng!`)
       }
 
       // Reload data để tiếp tục tạo
@@ -344,7 +374,7 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
           </Button>
           <h2>
             <FileAddOutlined /> 
-            {type === 'AP' ? ' 🛒 Công nợ NCC (PO → Payment Proposal)' : ' 💼 Công nợ khách hàng (SO → AR Document)'}
+            {type === 'AP' ? ' 🛒 Công nợ NCC (PO → Đề xuất Thanh toán)' : ' 💼 Công nợ khách hàng (SO → Phiếu Thu)'}
           </h2>
         </div>
 
