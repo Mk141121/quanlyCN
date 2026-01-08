@@ -64,8 +64,10 @@ const PhieuThuChiForm = ({ refId, refType, onBack, onSuccess }) => {
       }
       setDocumentData(data)
       // Auto-fill số tiền còn nợ
-      const remaining = data.totalAmount - (data.paidAmount || 0)
-      setSoTienThanhToan(remaining > 0 ? remaining : 0)
+      if (data && data.totalAmount !== undefined) {
+        const remaining = data.totalAmount - (data.paidAmount || 0)
+        setSoTienThanhToan(remaining > 0 ? remaining : 0)
+      }
     } catch (error) {
       message.error('Không thể load dữ liệu: ' + error.message)
     } finally {
@@ -297,7 +299,7 @@ const PhieuThuChiForm = ({ refId, refType, onBack, onSuccess }) => {
                 <Col span={8}>
                   <Statistic
                     title="Còn nợ"
-                    value={documentData.totalAmount - (documentData.paidAmount || 0)}
+                    value={(documentData && documentData.totalAmount) ? documentData.totalAmount - (documentData.paidAmount || 0) : 0}
                     suffix="VND"
                     valueStyle={{ fontSize: 18, color: '#ff4d4f' }}
                     formatter={(value) => value.toLocaleString()}
@@ -305,7 +307,7 @@ const PhieuThuChiForm = ({ refId, refType, onBack, onSuccess }) => {
                 </Col>
               </Row>
               <Progress
-                percent={Math.round(((documentData.paidAmount || 0) / documentData.totalAmount) * 100)}
+                percent={documentData && documentData.totalAmount > 0 ? Math.round(((documentData.paidAmount || 0) / documentData.totalAmount) * 100) : 0}
                 strokeColor={{
                   '0%': '#108ee9',
                   '100%': '#52c41a',
@@ -323,7 +325,7 @@ const PhieuThuChiForm = ({ refId, refType, onBack, onSuccess }) => {
                 value={soTienThanhToan}
                 onChange={setSoTienThanhToan}
                 min={1}
-                max={documentData.totalAmount - (documentData.paidAmount || 0)}
+                max={(documentData && documentData.totalAmount) ? documentData.totalAmount - (documentData.paidAmount || 0) : 0}
                 formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                 parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
                 size="large"
@@ -331,7 +333,7 @@ const PhieuThuChiForm = ({ refId, refType, onBack, onSuccess }) => {
                 addonAfter="VND"
               />
               <div style={{ marginTop: 8, color: '#666' }}>
-                Có thể thanh toán 1 phần. Số tiền tối đa: {(documentData.totalAmount - (documentData.paidAmount || 0)).toLocaleString()} VND
+                Có thể thanh toán 1 phần. Số tiền tối đa: {((documentData && documentData.totalAmount) ? (documentData.totalAmount - (documentData.paidAmount || 0)) : 0).toLocaleString()} VND
               </div>
             </div>
 

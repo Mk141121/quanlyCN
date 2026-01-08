@@ -248,7 +248,7 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
     onChange: (keys) => setSelectedOrderIds(keys)
   }
 
-  const totalSelected = availableOrders
+  const totalSelected = (availableOrders || [])
     .filter(order => selectedOrderIds.includes(order.id))
     .reduce((sum, order) => sum + order.amount, 0)
 
@@ -339,7 +339,7 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
                 value={selectedGroup}
                 size="large"
               >
-                {groups.map(g => (
+                {(groups || []).map(g => (
                   <Option key={g.id} value={g.id}>
                     {g.name}
                   </Option>
@@ -360,13 +360,13 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
                 style={{ width: '100%' }}
                 placeholder={`Chọn ${type === 'AP' ? 'nhà cung cấp' : 'khách hàng'}`}
                 onChange={(value) => {
-                  const partner = partners.find(p => p.id === value)
+                  const partner = value ? partners.find(p => p.id === value) : null
                   setSelectedPartner(partner)
                 }}
                 value={selectedPartner?.id}
                 size="large"
               >
-                {partners
+                {(partners || [])
                   .filter(p => !selectedGroup || p.groupId === selectedGroup)
                   .map(p => (
                     <Option key={p.id} value={p.id}>
@@ -421,18 +421,15 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
               summary={() => (
                 <Table.Summary fixed>
                   <Table.Summary.Row>
-                    <Table.Summary.Cell index={0}>
-                      <strong>Đã chọn: {selectedOrderIds.length} đơn</strong>
+                    <Table.Summary.Cell index={0} colSpan={4}>
+                      <strong style={{ whiteSpace: 'nowrap' }}>Đã chọn: {selectedOrderIds.length} đơn</strong>
                     </Table.Summary.Cell>
-                    <Table.Summary.Cell index={1} align="right">
-                      <Statistic
-                        value={totalSelected}
-                        suffix="VND"
-                        valueStyle={{ fontSize: 18, color: '#1890ff', fontWeight: 600 }}
-                        formatter={(value) => value.toLocaleString()}
-                      />
+                    <Table.Summary.Cell index={4} align="right">
+                      <strong style={{ fontSize: 18, color: '#1890ff', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                        {totalSelected.toLocaleString()} VND
+                      </strong>
                     </Table.Summary.Cell>
-                    <Table.Summary.Cell index={2} />
+                    <Table.Summary.Cell index={5} />
                   </Table.Summary.Row>
                 </Table.Summary>
               )}

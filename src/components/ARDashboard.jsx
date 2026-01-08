@@ -52,9 +52,10 @@ const ARDashboard = ({ onBack }) => {
   const loadCustomers = async () => {
     try {
       const data = await mockAPI.getCustomers()
-      setCustomers(data)
+      setCustomers(Array.isArray(data) ? data : [])
     } catch (error) {
       message.error('Không thể load danh sách khách hàng')
+      setCustomers([])
     }
   }
 
@@ -67,9 +68,10 @@ const ARDashboard = ({ onBack }) => {
         customerId: selectedCustomer
       }
       const data = await mockAPI.getARSummary(params)
-      setSummaryData(data)
+      setSummaryData(Array.isArray(data) ? data : [])
     } catch (error) {
       message.error('Không thể load báo cáo')
+      setSummaryData([])
     } finally {
       setLoading(false)
     }
@@ -85,9 +87,10 @@ const ARDashboard = ({ onBack }) => {
         toDate: dateRange[1].format('YYYY-MM-DD')
       }
       const data = await mockAPI.getCustomerOrders(params)
-      setOrderDetails(data)
+      setOrderDetails(Array.isArray(data) ? data : [])
     } catch (error) {
       message.error('Không thể load chi tiết đơn hàng')
+      setOrderDetails([])
     }
   }
 
@@ -227,11 +230,11 @@ const ARDashboard = ({ onBack }) => {
   ]
 
   // Tính tổng
-  const totals = summaryData.reduce((acc, item) => ({
-    totalSales: acc.totalSales + item.totalSales,
-    accountingAR: acc.accountingAR + item.accountingAR,
-    paid: acc.paid + item.paid,
-    remaining: acc.remaining + item.remaining
+  const totals = (summaryData || []).reduce((acc, item) => ({
+    totalSales: acc.totalSales + (item.totalSales || 0),
+    accountingAR: acc.accountingAR + (item.accountingAR || 0),
+    paid: acc.paid + (item.paid || 0),
+    remaining: acc.remaining + (item.remaining || 0)
   }), { totalSales: 0, accountingAR: 0, paid: 0, remaining: 0 })
 
   return (

@@ -197,14 +197,14 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
         // Load Payment Proposals (AP)
         data = await mockAPI.getPaymentProposals()
         // Transform to common format
-        data = data.map(pp => ({
+        data = (Array.isArray(data) ? data : []).map(pp => ({
           id: pp.id,
           code: pp.maDeXuat,
           partner: pp.supplier,  // Tên NCC
           amount: pp.totalAmount,
           paidAmount: pp.paidAmount || 0,
           status: pp.status,
-          itemCount: pp.items.length,
+          itemCount: pp.items?.length || 0,
           createdAt: pp.createdAt,
           type: 'PaymentProposal'
         }))
@@ -212,14 +212,14 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
         // Load AR Documents
         data = await mockAPI.getARDocuments()
         // Transform to common format
-        data = data.map(ar => ({
+        data = (Array.isArray(data) ? data : []).map(ar => ({
           id: ar.id,
           code: ar.maChungTu,
           partner: ar.customer,  // Tên khách hàng
           amount: ar.totalAmount,
           paidAmount: ar.paidAmount || 0,
           status: ar.status,
-          itemCount: ar.items.length,
+          itemCount: ar.items?.length || 0,
           createdAt: ar.createdAt,
           type: 'ARDocument'
         }))
@@ -227,6 +227,7 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
       setDocuments(data)
     } catch (error) {
       message.error('Không thể load danh sách: ' + error.message)
+      setDocuments([])
     } finally {
       setLoading(false)
     }

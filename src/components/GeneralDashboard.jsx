@@ -44,13 +44,18 @@ function GeneralDashboard({
         mockAPI.getRecentPayments({ limit: 10 })
       ])
 
-      setSummaryData(summary)
-      setArConfirmations(arList)
-      setApConfirmations(apList)
-      setRecentReceipts(receipts)
-      setRecentPayments(payments)
+      setSummaryData(summary || null)
+      setArConfirmations(Array.isArray(arList) ? arList : [])
+      setApConfirmations(Array.isArray(apList) ? apList : [])
+      setRecentReceipts(Array.isArray(receipts) ? receipts : [])
+      setRecentPayments(Array.isArray(payments) ? payments : [])
     } catch (error) {
       console.error('Error loading dashboard:', error)
+      setSummaryData(null)
+      setArConfirmations([])
+      setApConfirmations([])
+      setRecentReceipts([])
+      setRecentPayments([])
     } finally {
       setLoading(false)
     }
@@ -538,6 +543,7 @@ function GeneralDashboard({
         title={<span style={{ fontSize: '20px', fontWeight: 600 }}>📈 Báo cáo Công nợ Tổng hợp</span>}
         style={{ marginBottom: '24px' }}
       >
+        {summaryData && summaryData.customer_ar && summaryData.supplier_ap ? (
         <Row gutter={[24, 24]}>
           {/* Công nợ Khách hàng (AR) */}
           <Col xs={24} lg={12}>
@@ -556,7 +562,7 @@ function GeneralDashboard({
                 <Col span={8}>
                   <Statistic
                     title={<span style={{ color: 'white', fontSize: '0.9375rem', fontWeight: 700 }}>Doanh số</span>}
-                    value={summaryData.customer_ar.sales}
+                    value={summaryData.customer_ar.sales || 0}
                     prefix={<ShoppingCartOutlined style={{ fontSize: '1.25rem' }} />}
                     suffix="₫"
                     valueStyle={{ color: 'white', fontSize: '24px', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
@@ -565,7 +571,7 @@ function GeneralDashboard({
                 <Col span={8}>
                   <Statistic
                     title={<span style={{ color: 'white', fontSize: '0.9375rem', fontWeight: 700 }}>Đã thu</span>}
-                    value={summaryData.customer_ar.received}
+                    value={summaryData.customer_ar.received || 0}
                     prefix={<CheckCircleOutlined style={{ fontSize: '1.25rem' }} />}
                     suffix="₫"
                     valueStyle={{ color: '#6ee7b7', fontSize: '24px', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
@@ -574,7 +580,7 @@ function GeneralDashboard({
                 <Col span={8}>
                   <Statistic
                     title={<span style={{ color: 'white', fontSize: '0.9375rem', fontWeight: 700 }}>Chưa thu</span>}
-                    value={summaryData.customer_ar.pending}
+                    value={summaryData.customer_ar.pending || 0}
                     prefix={<ClockCircleOutlined style={{ fontSize: '1.25rem' }} />}
                     suffix="₫"
                     valueStyle={{ color: '#fb923c', fontSize: '24px', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
@@ -583,7 +589,7 @@ function GeneralDashboard({
               </Row>
               <div style={{ marginTop: '20px' }}>
                 <Progress 
-                  percent={summaryData.customer_ar.receivedPercent} 
+                  percent={summaryData.customer_ar.receivedPercent || 0} 
                   strokeColor="#6ee7b7"
                   trailColor="rgba(255,255,255,0.3)"
                   format={(percent) => <span style={{ color: 'white', fontWeight: 700, fontSize: '0.9375rem' }}>{percent}% đã thu</span>}
@@ -597,16 +603,16 @@ function GeneralDashboard({
                 </div>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <Tag style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, padding: '4px 12px', background: '#94a3b8', color: 'white', border: 'none' }}>
-                    Mới: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.customer_ar.statusCounts.new}</span>
+                    Mới: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.customer_ar.statusCounts?.new || 0}</span>
                   </Tag>
                   <Tag style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, padding: '4px 12px', background: '#fb923c', color: 'white', border: 'none' }}>
-                    Chờ thu: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.customer_ar.statusCounts.pending}</span>
+                    Chờ thu: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.customer_ar.statusCounts?.pending || 0}</span>
                   </Tag>
                   <Tag style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, padding: '4px 12px', background: '#fbbf24', color: '#78350f', border: 'none' }}>
-                    Thu 1 phần: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.customer_ar.statusCounts.partial}</span>
+                    Thu 1 phần: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.customer_ar.statusCounts?.partial || 0}</span>
                   </Tag>
                   <Tag style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, padding: '4px 12px', background: '#10b981', color: 'white', border: 'none' }}>
-                    Đã thu: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.customer_ar.statusCounts.completed}</span>
+                    Đã thu: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.customer_ar.statusCounts?.completed || 0}</span>
                   </Tag>
                 </div>
               </div>
@@ -630,7 +636,7 @@ function GeneralDashboard({
                 <Col span={8}>
                   <Statistic
                     title={<span style={{ color: 'white', fontSize: '0.9375rem', fontWeight: 700 }}>Doanh số</span>}
-                    value={summaryData.supplier_ap.purchases}
+                    value={summaryData.supplier_ap.purchases || 0}
                     prefix={<ShoppingCartOutlined style={{ fontSize: '1.25rem' }} />}
                     suffix="₫"
                     valueStyle={{ color: 'white', fontSize: '24px', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
@@ -639,7 +645,7 @@ function GeneralDashboard({
                 <Col span={8}>
                   <Statistic
                     title={<span style={{ color: 'white', fontSize: '0.9375rem', fontWeight: 700 }}>Đã chi</span>}
-                    value={summaryData.supplier_ap.paid}
+                    value={summaryData.supplier_ap.paid || 0}
                     prefix={<CheckCircleOutlined style={{ fontSize: '1.25rem' }} />}
                     suffix="₫"
                     valueStyle={{ color: '#6ee7b7', fontSize: '24px', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
@@ -648,7 +654,7 @@ function GeneralDashboard({
                 <Col span={8}>
                   <Statistic
                     title={<span style={{ color: 'white', fontSize: '0.9375rem', fontWeight: 700 }}>Chưa chi</span>}
-                    value={summaryData.supplier_ap.pending}
+                    value={summaryData.supplier_ap.pending || 0}
                     prefix={<ClockCircleOutlined style={{ fontSize: '1.25rem' }} />}
                     suffix="₫"
                     valueStyle={{ color: '#fb923c', fontSize: '24px', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
@@ -657,7 +663,7 @@ function GeneralDashboard({
               </Row>
               <div style={{ marginTop: '20px' }}>
                 <Progress 
-                  percent={summaryData.supplier_ap.paidPercent} 
+                  percent={summaryData.supplier_ap.paidPercent || 0} 
                   strokeColor="#6ee7b7"
                   trailColor="rgba(255,255,255,0.3)"
                   format={(percent) => <span style={{ color: 'white', fontWeight: 700, fontSize: '0.9375rem' }}>{percent}% đã chi</span>}
@@ -671,22 +677,27 @@ function GeneralDashboard({
                 </div>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <Tag style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, padding: '4px 12px', background: '#94a3b8', color: 'white', border: 'none' }}>
-                    Mới: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.supplier_ap.statusCounts.new}</span>
+                    Mới: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.supplier_ap.statusCounts?.new || 0}</span>
                   </Tag>
                   <Tag style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, padding: '4px 12px', background: '#fb923c', color: 'white', border: 'none' }}>
-                    Chờ chi: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.supplier_ap.statusCounts.pending}</span>
+                    Chờ chi: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.supplier_ap.statusCounts?.pending || 0}</span>
                   </Tag>
                   <Tag style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, padding: '4px 12px', background: '#fbbf24', color: '#78350f', border: 'none' }}>
-                    Chi 1 phần: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.supplier_ap.statusCounts.partial}</span>
+                    Chi 1 phần: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.supplier_ap.statusCounts?.partial || 0}</span>
                   </Tag>
                   <Tag style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, padding: '4px 12px', background: '#10b981', color: 'white', border: 'none' }}>
-                    Đã chi: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.supplier_ap.statusCounts.completed}</span>
+                    Đã chi: <span style={{ fontSize: '1rem', fontWeight: 800 }}>{summaryData.supplier_ap.statusCounts?.completed || 0}</span>
                   </Tag>
                 </div>
               </div>
             </Card>
           </Col>
         </Row>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
+            {loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu'}
+          </div>
+        )}
       </Card>
 
       {/* KHỐI 2: XÁC NHẬN CÔNG NỢ */}

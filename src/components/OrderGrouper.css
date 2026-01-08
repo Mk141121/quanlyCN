@@ -119,3 +119,12 @@
   }
 }
 
+/* Fix table summary text display */
+.ant-table-summary .ant-table-cell {
+  white-space: nowrap !important;
+}
+
+.ant-table-summary strong {
+  display: inline-block;
+  white-space: nowrap;
+}

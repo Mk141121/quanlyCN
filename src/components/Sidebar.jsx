@@ -1,7 +1,7 @@
 import React from 'react'
 import './Sidebar.css'
 
-const Sidebar = ({ onNavigate, darkMode, onToggleDarkMode, currentView }) => {
+const Sidebar = ({ onNavigate, darkMode, onToggleDarkMode, currentView, currentType }) => {
   return (
     <div className="sidebar-menu">
       {/* User Header */}
@@ -50,7 +50,7 @@ const Sidebar = ({ onNavigate, darkMode, onToggleDarkMode, currentView }) => {
         <div className="section-label">KHÁCH HÀNG</div>
         
         <button 
-          className={`menu-item ${currentView === 'grouper' ? 'active' : ''}`}
+          className={`menu-item ${currentView === 'grouper' && currentType === 'AR' ? 'active' : ''}`}
           onClick={() => onNavigate('grouper', 'AR')}
         >
           <span className="menu-item-icon">💼</span>
@@ -59,7 +59,7 @@ const Sidebar = ({ onNavigate, darkMode, onToggleDarkMode, currentView }) => {
         </button>
 
         <button 
-          className={`menu-item ${currentView === 'selector' ? 'active' : ''}`}
+          className={`menu-item ${currentView === 'selector' && currentType === 'AR' ? 'active' : ''}`}
           onClick={() => onNavigate('selector', 'AR')}
         >
           <span className="menu-item-icon">💵</span>
@@ -82,7 +82,7 @@ const Sidebar = ({ onNavigate, darkMode, onToggleDarkMode, currentView }) => {
         <div className="section-label">NHÀ CUNG CẤP</div>
         
         <button 
-          className={`menu-item ${currentView === 'grouper' ? 'active' : ''}`}
+          className={`menu-item ${currentView === 'grouper' && currentType === 'AP' ? 'active' : ''}`}
           onClick={() => onNavigate('grouper', 'AP')}
         >
           <span className="menu-item-icon">🏭</span>
@@ -91,7 +91,7 @@ const Sidebar = ({ onNavigate, darkMode, onToggleDarkMode, currentView }) => {
         </button>
 
         <button 
-          className={`menu-item ${currentView === 'selector' ? 'active' : ''}`}
+          className={`menu-item ${currentView === 'selector' && currentType === 'AP' ? 'active' : ''}`}
           onClick={() => onNavigate('selector', 'AP')}
         >
           <span className="menu-item-icon">💳</span>

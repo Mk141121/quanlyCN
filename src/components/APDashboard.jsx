@@ -52,9 +52,10 @@ const APDashboard = ({ onBack }) => {
   const loadSuppliers = async () => {
     try {
       const data = await mockAPI.getSuppliers()
-      setSuppliers(data)
+      setSuppliers(Array.isArray(data) ? data : [])
     } catch (error) {
       message.error('Không thể load danh sách nhà cung cấp')
+      setSuppliers([])
     }
   }
 
@@ -67,9 +68,10 @@ const APDashboard = ({ onBack }) => {
         supplierId: selectedSupplier
       }
       const data = await mockAPI.getAPSummary(params)
-      setSummaryData(data)
+      setSummaryData(Array.isArray(data) ? data : [])
     } catch (error) {
       message.error('Không thể load báo cáo')
+      setSummaryData([])
     } finally {
       setLoading(false)
     }
@@ -85,9 +87,10 @@ const APDashboard = ({ onBack }) => {
         toDate: dateRange[1].format('YYYY-MM-DD')
       }
       const data = await mockAPI.getSupplierOrders(params)
-      setOrderDetails(data)
+      setOrderDetails(Array.isArray(data) ? data : [])
     } catch (error) {
       message.error('Không thể load chi tiết đơn hàng')
+      setOrderDetails([])
     }
   }
 
@@ -227,11 +230,11 @@ const APDashboard = ({ onBack }) => {
   ]
 
   // Tính tổng
-  const totals = summaryData.reduce((acc, item) => ({
-    totalPurchase: acc.totalPurchase + item.totalPurchase,
-    accountingAP: acc.accountingAP + item.accountingAP,
-    paid: acc.paid + item.paid,
-    remaining: acc.remaining + item.remaining
+  const totals = (summaryData || []).reduce((acc, item) => ({
+    totalPurchase: acc.totalPurchase + (item.totalPurchase || 0),
+    accountingAP: acc.accountingAP + (item.accountingAP || 0),
+    paid: acc.paid + (item.paid || 0),
+    remaining: acc.remaining + (item.remaining || 0)
   }), { totalPurchase: 0, accountingAP: 0, paid: 0, remaining: 0 })
 
   return (

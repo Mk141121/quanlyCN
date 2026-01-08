@@ -126,6 +126,7 @@ function App() {
             darkMode={darkMode}
             onToggleDarkMode={() => setDarkMode(!darkMode)}
             currentView={view}
+            currentType={currentType}
           />
         </div>
         <div className="app-main">
