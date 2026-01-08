@@ -1,0 +1,10 @@
+/* Proposal Approval List Styles */
+.proposal-approval-list-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.proposal-approval-list-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}

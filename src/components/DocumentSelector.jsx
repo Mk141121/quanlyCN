@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Card, Table, Button, Tag, Radio, message, Spin, Input, Space, DatePicker } from 'antd'
-import { FileTextOutlined, RightOutlined, ArrowLeftOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons'
+import { FileTextOutlined, RightOutlined, ArrowLeftOutlined, SearchOutlined, FilterOutlined, PlusOutlined, EyeOutlined } from '@ant-design/icons'
 import { mockAPI } from '../utils/mockAPICongNo'
 import dayjs from 'dayjs'
 import './DocumentSelector.css'
@@ -9,21 +9,34 @@ const { RangePicker } = DatePicker
 
 // Màu sắc theo SPEC
 const STATUS_COLORS = {
-  CHO_THANH_TOAN: 'gold',
-  CHO_THU_TIEN: 'gold',
-  DA_THANH_TOAN: 'green',
-  PARTIAL_PAID: 'pink'  // Hồng nhạt cho thanh toán 1 phần
+  CHO_DUYET: 'orange',        // Cam - Chờ duyệt
+  CHO_THANH_TOAN: 'gold',     // Vàng - Chờ thanh toán
+  CHO_THU_TIEN: 'gold',       // Vàng
+  DA_THANH_TOAN: 'green',     // Xanh
+  DA_THU_TIEN: 'green',       // Xanh
+  KHONG_DUYET: 'red',         // Đỏ - Từ chối
+  PARTIAL_PAID: 'pink'        // Hồng nhạt cho thanh toán 1 phần
 }
 
 const STATUS_LABELS = {
+  CHO_DUYET: 'Chờ duyệt',
   CHO_THANH_TOAN: 'Chờ thanh toán',
   CHO_THU_TIEN: 'Chờ thu tiền',
   DA_THANH_TOAN: 'Đã thanh toán',
-  DA_THU_TIEN: 'Đã thu tiền'
+  DA_THU_TIEN: 'Đã thu tiền',
+  KHONG_DUYET: 'Không duyệt'
 }
 
 // Helper: Tính % thanh toán và trạng thái
 const getPaymentStatus = (doc) => {
+  // Xử lý các trạng thái đặc biệt trước
+  if (doc.status === 'CHO_DUYET') {
+    return { color: STATUS_COLORS.CHO_DUYET, label: STATUS_LABELS.CHO_DUYET }
+  }
+  if (doc.status === 'KHONG_DUYET') {
+    return { color: STATUS_COLORS.KHONG_DUYET, label: STATUS_LABELS.KHONG_DUYET }
+  }
+  
   const paidPercent = doc.amount > 0 ? Math.round(((doc.paidAmount || 0) / doc.amount) * 100) : 0
   
   if (paidPercent === 0) {
@@ -84,10 +97,12 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
   // Helper function for status filter
   const getStatusFilterProps = () => ({
     filters: [
-      { text: 'Đã thanh toán', value: 'DA_THANH_TOAN' },
-      { text: 'Đã thu tiền', value: 'DA_THU_TIEN' },
+      { text: 'Chờ duyệt', value: 'CHO_DUYET' },
       { text: 'Chờ thanh toán', value: 'CHO_THANH_TOAN' },
       { text: 'Chờ thu tiền', value: 'CHO_THU_TIEN' },
+      { text: 'Đã thanh toán', value: 'DA_THANH_TOAN' },
+      { text: 'Đã thu tiền', value: 'DA_THU_TIEN' },
+      { text: 'Không duyệt', value: 'KHONG_DUYET' },
       { text: 'Thanh toán 1 phần', value: 'PARTIAL' },
     ],
     onFilter: (value, record) => {
@@ -194,20 +209,23 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
     try {
       let data
       if (loaiPhieu === 'CHI') {
-        // Load Payment Proposals (AP)
-        data = await mockAPI.getPaymentProposals()
-        // Transform to common format
-        data = (Array.isArray(data) ? data : []).map(pp => ({
-          id: pp.id,
-          code: pp.maDeXuat,
-          partner: pp.supplier,  // Tên NCC
-          amount: pp.totalAmount,
-          paidAmount: pp.paidAmount || 0,
-          status: pp.status,
-          itemCount: pp.items?.length || 0,
-          createdAt: pp.createdAt,
-          type: 'PaymentProposal'
-        }))
+        // Load Phiếu Chi (AP)
+        data = await mockAPI.getPhieuThuChi()
+        // Transform to common format - only get CHI type
+        data = (Array.isArray(data) ? data : [])
+          .filter(p => p.loaiPhieu === 'CHI')
+          .map(pc => ({
+            id: pc.id,
+            code: pc.maPhieu,
+            partner: pc.supplier || pc.doiTac || '',  // Tên NCC hoặc Đối tác (phiếu thủ công)
+            amount: pc.totalAmount,
+            paidAmount: pc.paidAmount || 0,
+            status: pc.status,
+            itemCount: pc.poIds?.length || 0,
+            createdAt: pc.createdAt,
+            type: 'PhieuChi',
+            isManual: pc.isManual || false
+          }))
       } else {
         // Load AR Documents
         data = await mockAPI.getARDocuments()
@@ -215,13 +233,14 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
         data = (Array.isArray(data) ? data : []).map(ar => ({
           id: ar.id,
           code: ar.maChungTu,
-          partner: ar.customer,  // Tên khách hàng
+          partner: ar.customer || ar.doiTac || '',  // Tên khách hàng hoặc Đối tác (phiếu thủ công)
           amount: ar.totalAmount,
           paidAmount: ar.paidAmount || 0,
           status: ar.status,
           itemCount: ar.items?.length || 0,
           createdAt: ar.createdAt,
-          type: 'ARDocument'
+          type: 'ARDocument',
+          isManual: ar.isManual || false
         }))
       }
       setDocuments(data)
@@ -270,11 +289,11 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
       align: 'right',
       render: (amount) => (
         <strong style={{ fontSize: 16, color: '#1890ff' }}>
-          {amount.toLocaleString()} VND
+          {(amount || 0).toLocaleString()} VND
         </strong>
       ),
       ...getNumberRangeFilterProps('amount', 'Số tiền'),
-      sorter: (a, b) => a.amount - b.amount
+      sorter: (a, b) => (a.amount || 0) - (b.amount || 0)
     },
     {
       title: 'Số đơn hàng',
@@ -304,27 +323,56 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
     {
       title: 'Thao tác',
       key: 'action',
-      width: 120,
+      width: 140,
       fixed: 'right',
-      render: (_, record) => (
-        <Button
-          type="primary"
-          size="small"
-          icon={<RightOutlined />}
-          onClick={() => handleSelect(record)}
-          disabled={record.status === 'DA_THANH_TOAN' || record.status === 'DA_THU_TIEN'}
-        >
-          Chọn
-        </Button>
-      )
+      render: (_, record) => {
+        const isCompleted = record.status === 'DA_THANH_TOAN' || record.status === 'DA_THU_TIEN'
+        const isPending = record.status === 'CHO_DUYET'
+        const isRejected = record.status === 'KHONG_DUYET'
+        
+        // Phiếu chờ duyệt hoặc bị từ chối - chỉ xem
+        if (isPending || isRejected) {
+          return (
+            <Button
+              type="default"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => handleSelect(record, true)}
+            >
+              Xem
+            </Button>
+          )
+        }
+        
+        return (
+          <Button
+            type={isCompleted ? 'default' : 'primary'}
+            size="small"
+            icon={isCompleted ? <EyeOutlined /> : <RightOutlined />}
+            onClick={() => handleSelect(record, isCompleted)}
+          >
+            {isCompleted ? 'Xem' : 'Chọn'}
+          </Button>
+        )
+      }
     }
   ]
 
-  const handleSelect = (record) => {
+  const handleSelect = (record, isViewOnly = false) => {
     onSelect({
       refId: record.id,
       refType: record.type,
-      loaiPhieu
+      loaiPhieu,
+      isViewOnly
+    })
+  }
+
+  const handleCreateNew = () => {
+    onSelect({
+      refId: null,
+      refType: null,
+      loaiPhieu,
+      isCreateNew: true
     })
   }
 
@@ -340,6 +388,14 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
               {loaiPhieu === 'CHI' ? ' 💳 Phiếu Chi' : ' 💵 Phiếu Thu'}
             </h2>
           </div>
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />} 
+            onClick={handleCreateNew}
+            style={{ background: '#52c41a', borderColor: '#52c41a' }}
+          >
+            Tạo phiếu mới
+          </Button>
         </div>
 
         <Spin spinning={loading}>

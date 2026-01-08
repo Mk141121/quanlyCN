@@ -32,7 +32,9 @@ const ARDashboard = ({ onBack }) => {
     dayjs().startOf('month'),
     dayjs()
   ])
+  const [selectedGroup, setSelectedGroup] = useState(null)
   const [selectedCustomer, setSelectedCustomer] = useState(null)
+  const [customerGroups, setCustomerGroups] = useState([])
   const [customers, setCustomers] = useState([])
   const [summaryData, setSummaryData] = useState([])
   const [detailDrawer, setDetailDrawer] = useState(false)
@@ -40,6 +42,7 @@ const ARDashboard = ({ onBack }) => {
   const [orderDetails, setOrderDetails] = useState([])
 
   useEffect(() => {
+    loadCustomerGroups()
     loadCustomers()
   }, [])
 
@@ -47,7 +50,17 @@ const ARDashboard = ({ onBack }) => {
     if (dateRange && dateRange[0] && dateRange[1]) {
       loadSummary()
     }
-  }, [dateRange, selectedCustomer])
+  }, [dateRange, selectedGroup, selectedCustomer])
+
+  const loadCustomerGroups = async () => {
+    try {
+      const data = await mockAPI.getCustomerGroups()
+      setCustomerGroups(Array.isArray(data) ? data : [])
+    } catch (error) {
+      message.error('Không thể load danh sách nhóm khách hàng')
+      setCustomerGroups([])
+    }
+  }
 
   const loadCustomers = async () => {
     try {
@@ -65,6 +78,7 @@ const ARDashboard = ({ onBack }) => {
       const params = {
         fromDate: dateRange[0].format('YYYY-MM-DD'),
         toDate: dateRange[1].format('YYYY-MM-DD'),
+        groupId: selectedGroup,
         customerId: selectedCustomer
       }
       const data = await mockAPI.getARSummary(params)
@@ -102,7 +116,8 @@ const ARDashboard = ({ onBack }) => {
       key: 'customerName',
       fixed: 'left',
       width: 200,
-      render: (text) => <strong>{text}</strong>
+      render: (text) => <strong>{text}</strong>,
+      sorter: (a, b) => a.customerName.localeCompare(b.customerName)
     },
     {
       title: 'Tổng doanh số\n(CN tạm)',
@@ -114,7 +129,8 @@ const ARDashboard = ({ onBack }) => {
         <span style={{ color: '#1890ff', fontWeight: 500 }}>
           {value.toLocaleString()}
         </span>
-      )
+      ),
+      sorter: (a, b) => a.totalSales - b.totalSales
     },
     {
       title: 'Công nợ cần thu\n(CN chính thức)',
@@ -126,7 +142,8 @@ const ARDashboard = ({ onBack }) => {
         <span style={{ color: '#faad14', fontWeight: 600 }}>
           {value.toLocaleString()}
         </span>
-      )
+      ),
+      sorter: (a, b) => a.accountingAR - b.accountingAR
     },
     {
       title: 'Đã thanh toán',
@@ -138,7 +155,8 @@ const ARDashboard = ({ onBack }) => {
         <span style={{ color: '#52c41a', fontWeight: 500 }}>
           {value.toLocaleString()}
         </span>
-      )
+      ),
+      sorter: (a, b) => a.paid - b.paid
     },
     {
       title: 'Còn lại',
@@ -150,7 +168,8 @@ const ARDashboard = ({ onBack }) => {
         <span style={{ color: value > 0 ? '#ff4d4f' : '#52c41a', fontWeight: 600 }}>
           {value.toLocaleString()}
         </span>
-      )
+      ),
+      sorter: (a, b) => a.remaining - b.remaining
     },
     {
       title: '% Thu',
@@ -166,6 +185,11 @@ const ARDashboard = ({ onBack }) => {
             {rate}%
           </Tag>
         )
+      },
+      sorter: (a, b) => {
+        const rateA = a.accountingAR > 0 ? (a.paid / a.accountingAR) * 100 : 0
+        const rateB = b.accountingAR > 0 ? (b.paid / b.accountingAR) * 100 : 0
+        return rateA - rateB
       }
     },
     {
@@ -269,7 +293,7 @@ const ARDashboard = ({ onBack }) => {
         {/* Bộ lọc */}
         <Card size="small" style={{ marginBottom: 16, background: '#fafafa' }}>
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={8}>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
                 Khoảng ngày
               </label>
@@ -281,7 +305,24 @@ const ARDashboard = ({ onBack }) => {
                 size="large"
               />
             </Col>
-            <Col span={12}>
+            <Col span={8}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
+                Nhóm khách hàng
+              </label>
+              <Select
+                value={selectedGroup}
+                onChange={setSelectedGroup}
+                style={{ width: '100%' }}
+                size="large"
+                allowClear
+                placeholder="Tất cả nhóm"
+              >
+                {customerGroups.map(g => (
+                  <Option key={g.id} value={g.id}>{g.name}</Option>
+                ))}
+              </Select>
+            </Col>
+            <Col span={8}>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
                 Khách hàng
               </label>
@@ -293,9 +334,11 @@ const ARDashboard = ({ onBack }) => {
                 allowClear
                 placeholder="Tất cả khách hàng"
               >
-                {customers.map(c => (
-                  <Option key={c.id} value={c.id}>{c.name}</Option>
-                ))}
+                {customers
+                  .filter(c => !selectedGroup || c.groupId === selectedGroup)
+                  .map(c => (
+                    <Option key={c.id} value={c.id}>{c.name}</Option>
+                  ))}
               </Select>
             </Col>
           </Row>

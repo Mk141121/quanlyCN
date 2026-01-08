@@ -39,6 +39,8 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
   const [availableOrders, setAvailableOrders] = useState([])
   const [selectedOrderIds, setSelectedOrderIds] = useState([])
   const [submitting, setSubmitting] = useState(false)
+  const [searchText, setSearchText] = useState('')
+  const [allOrders, setAllOrders] = useState([])
 
   // Helper function for text search filter
   const getColumnSearchProps = (dataIndex, placeholder) => ({
@@ -180,7 +182,17 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
       }
       
       setAvailableOrders(data)
-      setSelectedOrderIds([])
+      // Merge với allOrders để giữ lại tất cả đơn đã load
+      setAllOrders(prev => {
+        const newOrders = [...prev]
+        data.forEach(order => {
+          if (!newOrders.find(o => o.id === order.id)) {
+            newOrders.push(order)
+          }
+        })
+        return newOrders
+      })
+      // Không reset selectedOrderIds - giữ nguyên các đơn đã chọn trước đó
     } catch (error) {
       message.error('Không thể load đơn hàng: ' + error.message)
     } finally {
@@ -230,14 +242,21 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      width: 130,
-      render: (status) => (
-        <Tag color="blue">{status}</Tag>
-      ),
+      width: 150,
+      render: (status) => {
+        const statusMap = {
+          'DA_DOI_CHIEU': { color: 'green', label: 'Đã đối chiếu' },
+          'CHO_DOI_CHIEU': { color: 'orange', label: 'Chờ đối chiếu' },
+          'CHO_THANH_TOAN': { color: 'blue', label: 'Chờ thanh toán' },
+          'ACTIVE': { color: 'default', label: 'Hoạt động' }
+        }
+        const statusInfo = statusMap[status] || { color: 'default', label: status }
+        return <Tag color={statusInfo.color}>{statusInfo.label}</Tag>
+      },
       filters: [
-        { text: 'DA_DOI_CHIEU', value: 'DA_DOI_CHIEU' },
-        { text: 'CHO_THANH_TOAN', value: 'CHO_THANH_TOAN' },
-        { text: 'ACTIVE', value: 'ACTIVE' },
+        { text: 'Đã đối chiếu', value: 'DA_DOI_CHIEU' },
+        { text: 'Chờ đối chiếu', value: 'CHO_DOI_CHIEU' },
+        { text: 'Chờ thanh toán', value: 'CHO_THANH_TOAN' }
       ],
       onFilter: (value, record) => record.status === value
     }
@@ -245,10 +264,11 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
 
   const rowSelection = {
     selectedRowKeys: selectedOrderIds,
-    onChange: (keys) => setSelectedOrderIds(keys)
+    onChange: (keys) => setSelectedOrderIds(keys),
+    preserveSelectedRowKeys: true
   }
 
-  const totalSelected = (availableOrders || [])
+  const totalSelected = (allOrders || [])
     .filter(order => selectedOrderIds.includes(order.id))
     .reduce((sum, order) => sum + order.amount, 0)
 
@@ -260,20 +280,45 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
 
     setSubmitting(true)
     try {
+      // Tự động xác định partner từ các đơn đã chọn - dùng allOrders thay vì availableOrders
+      const selectedOrders = allOrders.filter(order => selectedOrderIds.includes(order.id))
+      
+      // Lấy partner info: Ưu tiên selectedPartner -> selectedGroup -> từ đơn hàng đầu tiên
+      let partnerInfo
+      if (selectedPartner) {
+        partnerInfo = selectedPartner
+      } else if (selectedGroup) {
+        partnerInfo = {
+          id: selectedGroup,
+          name: groups.find(g => g.id === selectedGroup)?.name || 'Unknown Group'
+        }
+      } else if (selectedOrders.length > 0) {
+        // Lấy thông tin từ đơn hàng đầu tiên
+        const firstOrder = selectedOrders[0]
+        partnerInfo = {
+          id: type === 'AP' ? firstOrder.supplierId : firstOrder.customerId,
+          name: type === 'AP' ? firstOrder.supplier : firstOrder.customer
+        }
+      } else {
+        message.error('Không xác định được thông tin đối tác!')
+        return
+      }
+
       const payload = {
-        [type === 'AP' ? 'supplierId' : 'customerId']: selectedPartner.id,
-        [type === 'AP' ? 'supplier' : 'customer']: selectedPartner.name,
+        [type === 'AP' ? 'supplierId' : 'customerId']: partnerInfo.id,
+        [type === 'AP' ? 'supplier' : 'customer']: partnerInfo.name,
         [type === 'AP' ? 'poIds' : 'soIds']: selectedOrderIds,
-        totalAmount: totalSelected
+        totalAmount: totalSelected,
+        isGroupLevel: !selectedPartner // Flag để phân biệt group level vs partner level
       }
 
       let result
       if (type === 'AP') {
-        result = await mockAPI.createPaymentProposal(payload)
-        message.success(`✅ Tạo Payment Proposal thành công! Mã: ${result.maDeXuat}`)
+        result = await mockAPI.confirmAPDebt(payload)
+        message.success(`✅ Xác nhận công nợ thành công cho ${result.poIds.length} đơn hàng!`)
       } else {
-        result = await mockAPI.createARDocument(payload)
-        message.success(`✅ Tạo AR Document thành công! Mã: ${result.maChungTu}`)
+        result = await mockAPI.confirmARDebt(payload)
+        message.success(`✅ Xác nhận công nợ thành công cho ${result.soIds.length} đơn hàng!`)
       }
 
       // Reload data để tiếp tục tạo
@@ -404,19 +449,37 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
         {/* Orders table */}
         {availableOrders.length > 0 && (
           <>
-            <div style={{ margin: '24px 0' }}>
+            <div style={{ margin: '24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Tag color="blue" style={{ fontSize: 14, padding: '4px 12px' }}>
                 Danh sách {type === 'AP' ? 'PO' : 'SO'} đã đối chiếu - Sẵn sàng gom
               </Tag>
+              <Input
+                placeholder={`Tìm ${type === 'AP' ? 'nhà cung cấp' : 'khách hàng'}...`}
+                prefix={<SearchOutlined />}
+                allowClear
+                style={{ width: 300 }}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                size="large"
+              />
             </div>
 
             <Table
               rowSelection={rowSelection}
               columns={columns}
-              dataSource={availableOrders}
+              dataSource={availableOrders.filter(order => {
+                if (!searchText) return true
+                const partnerName = (type === 'AP' ? order.supplier : order.customer) || ''
+                return partnerName.toLowerCase().includes(searchText.toLowerCase())
+              })}
               rowKey="id"
               loading={loading}
-              pagination={false}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: false,
+                showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} đơn hàng`,
+                position: ['bottomCenter']
+              }}
               locale={{ emptyText: 'Không có đơn hàng nào' }}
               summary={() => (
                 <Table.Summary fixed>

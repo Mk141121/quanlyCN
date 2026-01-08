@@ -1,7 +1,44 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { mockAPI } from '../utils/mockAPICongNo'
 import './Sidebar.css'
 
 const Sidebar = ({ onNavigate, darkMode, onToggleDarkMode, currentView, currentType }) => {
+  const [pendingProposals, setPendingProposals] = useState(0)
+  const [pendingVouchers, setPendingVouchers] = useState(0)
+  const [pendingPOCount, setPendingPOCount] = useState(0)
+  const [pendingSOCount, setPendingSOCount] = useState(0)
+
+  useEffect(() => {
+    loadPendingCounts()
+    // Refresh every 30 seconds
+    const interval = setInterval(loadPendingCounts, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const loadPendingCounts = async () => {
+    try {
+      // Đề xuất thanh toán chờ duyệt
+      const proposals = await mockAPI.getPaymentProposalList('PENDING')
+      setPendingProposals(proposals?.length || 0)
+
+      // Phiếu thủ công chờ duyệt
+      const vouchers = await mockAPI.getPendingVouchers()
+      setPendingVouchers(vouchers?.length || 0)
+
+      // PO chờ xác nhận công nợ
+      const pos = await mockAPI.getAvailablePurchaseOrders()
+      setPendingPOCount(pos?.length || 0)
+
+      // SO chờ xác nhận công nợ
+      const sos = await mockAPI.getAvailableSalesOrders()
+      setPendingSOCount(sos?.length || 0)
+    } catch (error) {
+      console.error('Error loading pending counts:', error)
+    }
+  }
+
+  const totalPendingApprovals = pendingProposals + pendingVouchers
+
   return (
     <div className="sidebar-menu">
       {/* User Header */}
@@ -55,6 +92,7 @@ const Sidebar = ({ onNavigate, darkMode, onToggleDarkMode, currentView, currentT
         >
           <span className="menu-item-icon">💼</span>
           <span className="menu-item-text">Xác nhận Công nợ</span>
+          {pendingSOCount > 0 && <span className="menu-badge">{pendingSOCount}</span>}
           <span className="menu-item-dots">⋮</span>
         </button>
 
@@ -87,6 +125,26 @@ const Sidebar = ({ onNavigate, darkMode, onToggleDarkMode, currentView, currentT
         >
           <span className="menu-item-icon">🏭</span>
           <span className="menu-item-text">Xác nhận Công nợ</span>
+          {pendingPOCount > 0 && <span className="menu-badge">{pendingPOCount}</span>}
+          <span className="menu-item-dots">⋮</span>
+        </button>
+
+        <button 
+          className={`menu-item ${currentView === 'payment-proposal-creator' ? 'active' : ''}`}
+          onClick={() => onNavigate('payment-proposal-creator')}
+        >
+          <span className="menu-item-icon">📝</span>
+          <span className="menu-item-text">Đề xuất Thanh toán</span>
+          <span className="menu-item-dots">⋮</span>
+        </button>
+
+        <button 
+          className={`menu-item ${currentView === 'proposal-approval-list' ? 'active' : ''}`}
+          onClick={() => onNavigate('proposal-approval-list')}
+        >
+          <span className="menu-item-icon">✅</span>
+          <span className="menu-item-text">Duyệt Đề xuất</span>
+          {totalPendingApprovals > 0 && <span className="menu-badge badge-warning">{totalPendingApprovals}</span>}
           <span className="menu-item-dots">⋮</span>
         </button>
 

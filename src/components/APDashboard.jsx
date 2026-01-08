@@ -32,7 +32,9 @@ const APDashboard = ({ onBack }) => {
     dayjs().startOf('month'),
     dayjs()
   ])
+  const [selectedGroup, setSelectedGroup] = useState(null)
   const [selectedSupplier, setSelectedSupplier] = useState(null)
+  const [supplierGroups, setSupplierGroups] = useState([])
   const [suppliers, setSuppliers] = useState([])
   const [summaryData, setSummaryData] = useState([])
   const [detailDrawer, setDetailDrawer] = useState(false)
@@ -40,6 +42,7 @@ const APDashboard = ({ onBack }) => {
   const [orderDetails, setOrderDetails] = useState([])
 
   useEffect(() => {
+    loadSupplierGroups()
     loadSuppliers()
   }, [])
 
@@ -47,7 +50,17 @@ const APDashboard = ({ onBack }) => {
     if (dateRange && dateRange[0] && dateRange[1]) {
       loadSummary()
     }
-  }, [dateRange, selectedSupplier])
+  }, [dateRange, selectedGroup, selectedSupplier])
+
+  const loadSupplierGroups = async () => {
+    try {
+      const data = await mockAPI.getSupplierGroups()
+      setSupplierGroups(Array.isArray(data) ? data : [])
+    } catch (error) {
+      message.error('Không thể load danh sách nhóm nhà cung cấp')
+      setSupplierGroups([])
+    }
+  }
 
   const loadSuppliers = async () => {
     try {
@@ -65,6 +78,7 @@ const APDashboard = ({ onBack }) => {
       const params = {
         fromDate: dateRange[0].format('YYYY-MM-DD'),
         toDate: dateRange[1].format('YYYY-MM-DD'),
+        groupId: selectedGroup,
         supplierId: selectedSupplier
       }
       const data = await mockAPI.getAPSummary(params)
@@ -102,7 +116,8 @@ const APDashboard = ({ onBack }) => {
       key: 'supplierName',
       fixed: 'left',
       width: 200,
-      render: (text) => <strong>{text}</strong>
+      render: (text) => <strong>{text}</strong>,
+      sorter: (a, b) => a.supplierName.localeCompare(b.supplierName)
     },
     {
       title: 'Tổng giá trị mua\n(CN tạm)',
@@ -114,7 +129,8 @@ const APDashboard = ({ onBack }) => {
         <span style={{ color: '#1890ff', fontWeight: 500 }}>
           {value.toLocaleString()}
         </span>
-      )
+      ),
+      sorter: (a, b) => a.totalPurchase - b.totalPurchase
     },
     {
       title: 'Công nợ phải trả\n(CN chính thức)',
@@ -126,7 +142,8 @@ const APDashboard = ({ onBack }) => {
         <span style={{ color: '#faad14', fontWeight: 600 }}>
           {value.toLocaleString()}
         </span>
-      )
+      ),
+      sorter: (a, b) => a.accountingAP - b.accountingAP
     },
     {
       title: 'Đã thanh toán',
@@ -138,7 +155,8 @@ const APDashboard = ({ onBack }) => {
         <span style={{ color: '#52c41a', fontWeight: 500 }}>
           {value.toLocaleString()}
         </span>
-      )
+      ),
+      sorter: (a, b) => a.paid - b.paid
     },
     {
       title: 'Còn lại',
@@ -150,7 +168,8 @@ const APDashboard = ({ onBack }) => {
         <span style={{ color: value > 0 ? '#ff4d4f' : '#52c41a', fontWeight: 600 }}>
           {value.toLocaleString()}
         </span>
-      )
+      ),
+      sorter: (a, b) => a.remaining - b.remaining
     },
     {
       title: '% Trả',
@@ -166,6 +185,11 @@ const APDashboard = ({ onBack }) => {
             {rate}%
           </Tag>
         )
+      },
+      sorter: (a, b) => {
+        const rateA = a.accountingAP > 0 ? (a.paid / a.accountingAP) * 100 : 0
+        const rateB = b.accountingAP > 0 ? (b.paid / b.accountingAP) * 100 : 0
+        return rateA - rateB
       }
     },
     {
@@ -269,7 +293,7 @@ const APDashboard = ({ onBack }) => {
         {/* Bộ lọc */}
         <Card size="small" style={{ marginBottom: 16, background: '#fafafa' }}>
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={8}>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
                 Khoảng ngày
               </label>
@@ -281,7 +305,24 @@ const APDashboard = ({ onBack }) => {
                 size="large"
               />
             </Col>
-            <Col span={12}>
+            <Col span={8}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
+                Nhóm nhà cung cấp
+              </label>
+              <Select
+                value={selectedGroup}
+                onChange={setSelectedGroup}
+                style={{ width: '100%' }}
+                size="large"
+                allowClear
+                placeholder="Tất cả nhóm"
+              >
+                {supplierGroups.map(g => (
+                  <Option key={g.id} value={g.id}>{g.name}</Option>
+                ))}
+              </Select>
+            </Col>
+            <Col span={8}>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
                 Nhà cung cấp
               </label>
@@ -293,9 +334,11 @@ const APDashboard = ({ onBack }) => {
                 allowClear
                 placeholder="Tất cả nhà cung cấp"
               >
-                {suppliers.map(s => (
-                  <Option key={s.id} value={s.id}>{s.name}</Option>
-                ))}
+                {suppliers
+                  .filter(s => !selectedGroup || s.groupId === selectedGroup)
+                  .map(s => (
+                    <Option key={s.id} value={s.id}>{s.name}</Option>
+                  ))}
               </Select>
             </Col>
           </Row>
