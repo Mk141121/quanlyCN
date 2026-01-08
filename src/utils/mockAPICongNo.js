@@ -426,57 +426,7 @@ export const mockAPI = {
     })
 
     mockPaymentProposals.push(newPP)
-// console.log('✅ Created Payment Proposal:', newPP.maDeXuat)
     return newPP
-  },
-
-  // Tạo AR Document (Gom SO)
-  createARDocument: async (data) => {
-    await delay(500)
-
-    // Validation: Kiểm tra tổng tiền khớp
-    const totalSO = data.soIds.reduce((sum, soId) => {
-      const so = mockSalesOrders.find(s => s.id === soId)
-      return sum + (so?.amount || 0)
-    }, 0)
-
-    if (totalSO !== data.totalAmount) {
-      throw new Error(`Tổng tiền không khớp! SO: ${totalSO}, Input: ${data.totalAmount}`)
-    }
-
-    // Tạo AR mới
-    const newAR = {
-      id: `ar-${Date.now()}`,
-      maChungTu: `AR-2026-${String(mockARDocuments.length + 1).padStart(3, '0')}`,
-      customer: data.customer,
-      customerId: data.customerId,
-      totalAmount: data.totalAmount,
-      paidAmount: 0,  // Chưa thu tiền
-      status: 'CHO_THU_TIEN',
-      createdAt: new Date().toISOString(),
-      items: data.soIds.map(soId => {
-        const so = mockSalesOrders.find(s => s.id === soId)
-        return {
-          id: soId,
-          maDon: so.maDon,
-          amount: so.amount,
-          soStatus: 'CHO_THU_TIEN'
-        }
-      })
-    }
-
-    // Cập nhật SO - chỉ thay đổi trạng thái (giống AP flow)
-    data.soIds.forEach(soId => {
-      const so = mockSalesOrders.find(s => s.id === soId)
-      if (so) {
-        so.status = 'DA_DOI_CHIEU'  // Đã đối chiếu (tương tự confirmAPDebt)
-        so.arDocumentId = newAR.id
-      }
-    })
-
-    mockARDocuments.push(newAR)
-// console.log('✅ Created AR Document:', newAR.maChungTu)
-    return newAR
   },
 
   // Lấy danh sách Payment Proposals
@@ -555,7 +505,6 @@ export const mockAPI = {
     }
 
     // TRANSACTION: 4 tầng cập nhật (hỗ trợ thanh toán 1 phần)
-// console.log('🔄 Starting CASCADE UPDATE Transaction...')
 
     // Case 1: Thanh toán Phiếu Chi đã tạo từ đề xuất
     if (data.refType === 'PhieuChi') {
@@ -596,7 +545,6 @@ export const mockAPI = {
       status: 'DA_THANH_TOAN',
       createdAt: new Date().toISOString()
     }
-// console.log('✅ 1. Created PhieuThuChi:', phieuThuChi.id)
 
     // 2. Cập nhật chứng từ gốc (Payment Proposal hoặc AR Document)
     if (data.refType === 'PaymentProposal') {
@@ -608,7 +556,6 @@ export const mockAPI = {
         // Nếu đã thanh toán đủ → chuyển status
         if (pp.paidAmount >= pp.totalAmount) {
           pp.status = 'DA_THANH_TOAN'
-// console.log('✅ 2. Updated PaymentProposal:', pp.maDeXuat, '→ DA_THANH_TOAN (FULL)')
 
           // 3. Cập nhật toàn bộ PO items (chỉ khi thanh toán FULL)
           pp.items.forEach(item => {
@@ -620,11 +567,8 @@ export const mockAPI = {
               po.status = 'DA_THANH_TOAN'
             }
             
-// console.log('✅ 3. Updated PO:', item.maDon, '→ DA_THANH_TOAN')
           })
         } else {
-// console.log(`✅ 2. Updated PaymentProposal: ${pp.maDeXuat} → PARTIAL (${pp.paidAmount}/${pp.totalAmount})`)
-// console.log('⚠️ 3. PO items remain CHO_THANH_TOAN (partial payment)')
         }
       }
     } else if (data.refType === 'ARDocument') {
@@ -636,7 +580,6 @@ export const mockAPI = {
         // Nếu đã thu đủ → chuyển status
         if (ar.paidAmount >= ar.totalAmount) {
           ar.status = 'DA_THU_TIEN'
-// console.log('✅ 2. Updated ARDocument:', ar.maChungTu, '→ DA_THU_TIEN (FULL)')
 
           // 3. Cập nhật toàn bộ SO items (chỉ khi thu FULL)
           ar.items.forEach(item => {
@@ -648,19 +591,14 @@ export const mockAPI = {
               so.status = 'DA_THU_TIEN'
             }
             
-// console.log('✅ 3. Updated SO:', item.maDon, '→ DA_THU_TIEN')
           })
         } else {
-// console.log(`✅ 2. Updated ARDocument: ${ar.maChungTu} → PARTIAL (${ar.paidAmount}/${ar.totalAmount})`)
-// console.log('⚠️ 3. SO items remain CHO_THU_TIEN (partial payment)')
         }
       }
     }
 
     // 4. Khấu trừ công nợ (giả lập)
-// console.log('✅ 4. Deducted debt:', data.soTien.toLocaleString(), 'VND')
 
-// console.log('✨ CASCADE UPDATE completed successfully!')
 
     mockPhieuThuChi.push(phieuThuChi)
     return phieuThuChi
