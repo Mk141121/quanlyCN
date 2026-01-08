@@ -3,134 +3,156 @@
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
-// ============= PURCHASE ORDERS (Đơn mua hàng) =============
-export const mockPurchaseOrders = [
-  // Đơn chưa gom
-  { 
-    id: "po-001", 
-    maDon: "PO-001", 
-    supplier: "NCC Rau Sạch Đà Lạt",
-    supplierId: "sup-001",
-    amount: 5000000, 
-    status: "DA_DOI_CHIEU",  // Đã đối chiếu, sẵn sàng gom
-    paymentProposalId: null
-  },
-  { 
-    id: "po-002", 
-    maDon: "PO-002", 
-    supplier: "NCC Rau Sạch Đà Lạt",
-    supplierId: "sup-001",
-    amount: 5000000, 
-    status: "DA_DOI_CHIEU",
-    paymentProposalId: null
-  },
-  { 
-    id: "po-003", 
-    maDon: "PO-003", 
-    supplier: "Nhà cung cấp Vật tư Y tế",
-    supplierId: "sup-002",
-    amount: 8000000, 
-    status: "DA_DOI_CHIEU",
-    paymentProposalId: null
-  },
-  { 
-    id: "po-004", 
-    maDon: "PO-004", 
-    supplier: "Nhà cung cấp Vật tư Y tế",
-    supplierId: "sup-002",
-    amount: 7000000, 
-    status: "DA_DOI_CHIEU",
-    paymentProposalId: null
-  },
-  // Đơn chưa đối chiếu - KHÔNG hiện trong gom đơn
-  { 
-    id: "po-999", 
-    maDon: "PO-999", 
-    supplier: "NCC Test",
-    supplierId: "sup-999",
-    amount: 1000000, 
-    status: "MOI",  // Chưa đối chiếu
-    paymentProposalId: null
-  },
-  // Đơn đã gom vào PP
-  { 
-    id: "po-888", 
-    maDon: "PO-888", 
-    supplier: "Công ty Phân bón Xanh",
-    supplierId: "sup-003",
-    amount: 20000000, 
-    status: "CHO_THANH_TOAN",
-    paymentProposalId: "pp-001"  // Đã gom vào PP-001
-  },
-  { 
-    id: "po-889", 
-    maDon: "PO-889", 
-    supplier: "Công ty Phân bón Xanh",
-    supplierId: "sup-003",
-    amount: 30000000, 
-    status: "CHO_THANH_TOAN",
-    paymentProposalId: "pp-001"
-  }
+// ============= CUSTOMER GROUPS (Nhóm khách hàng) =============
+export const mockCustomerGroups = [
+  { id: "cg-001", name: "Tập đoàn WinCommerce", description: "Hệ thống siêu thị WinMart" },
+  { id: "cg-002", name: "Tập đoàn Saigon Co.op", description: "Hệ thống Co.opMart" },
+  { id: "cg-003", name: "Tập đoàn AEON", description: "Hệ thống AEON Mall" }
 ]
 
-// ============= SALES ORDERS (Đơn bán hàng) =============
+// ============= SUPPLIER GROUPS (Nhóm nhà cung cấp) =============
+export const mockSupplierGroups = [
+  { id: "sg-001", name: "Tập đoàn Nông nghiệp Đà Lạt", description: "NCC rau sạch, hoa" },
+  { id: "sg-002", name: "Tập đoàn Hóa chất Central", description: "NCC phân bón, thuốc trừ sâu" },
+  { id: "sg-003", name: "Tập đoàn Thép Hòa Phát", description: "NCC vật liệu xây dựng" }
+]
+
+// ============= CUSTOMERS (Khách hàng - 13 total) =============
+export const mockCustomers = [
+  // Nhóm WinCommerce (3 chi nhánh)
+  { id: "cus-001", name: "WinMart - Chi nhánh Quận 1", groupId: "cg-001", groupName: "Tập đoàn WinCommerce" },
+  { id: "cus-002", name: "WinMart - Chi nhánh Quận 3", groupId: "cg-001", groupName: "Tập đoàn WinCommerce" },
+  { id: "cus-003", name: "WinMart - Chi nhánh Bình Thạnh", groupId: "cg-001", groupName: "Tập đoàn WinCommerce" },
+  
+  // Nhóm Saigon Co.op (3 chi nhánh)
+  { id: "cus-004", name: "Co.opMart - Chi nhánh Tân Bình", groupId: "cg-002", groupName: "Tập đoàn Saigon Co.op" },
+  { id: "cus-005", name: "Co.opMart - Chi nhánh Gò Vấp", groupId: "cg-002", groupName: "Tập đoàn Saigon Co.op" },
+  { id: "cus-006", name: "Co.opMart - Chi nhánh Thủ Đức", groupId: "cg-002", groupName: "Tập đoàn Saigon Co.op" },
+  
+  // Nhóm AEON (3 chi nhánh)
+  { id: "cus-007", name: "AEON Mall Tân Phú", groupId: "cg-003", groupName: "Tập đoàn AEON" },
+  { id: "cus-008", name: "AEON Mall Bình Tân", groupId: "cg-003", groupName: "Tập đoàn AEON" },
+  { id: "cus-009", name: "AEON Mall Canary", groupId: "cg-003", groupName: "Tập đoàn AEON" },
+  
+  // Khách hàng độc lập (10 KH không thuộc nhóm)
+  { id: "cus-010", name: "Cửa hàng Thực phẩm Sạch An Nhiên", groupId: null, groupName: null },
+  { id: "cus-011", name: "Siêu thị Mini Bách Hóa Xanh", groupId: null, groupName: null },
+  { id: "cus-012", name: "Nhà hàng Món Ngon Quê Hương", groupId: null, groupName: null },
+  { id: "cus-013", name: "Khách sạn Sunrise Palace", groupId: null, groupName: null },
+  { id: "cus-014", name: "Trường MN Hoa Mai", groupId: null, groupName: null },
+  { id: "cus-015", name: "Bệnh viện Đa khoa Tâm Đức", groupId: null, groupName: null },
+  { id: "cus-016", name: "Công ty TNHH Thương mại Phát Đạt", groupId: null, groupName: null },
+  { id: "cus-017", name: "Quán Cafe The Coffee House", groupId: null, groupName: null },
+  { id: "cus-018", name: "Cửa hàng Tiện lợi GS25", groupId: null, groupName: null },
+  { id: "cus-019", name: "Nhà hàng Lẩu Hải Sản Biển Đông", groupId: null, groupName: null }
+]
+
+// ============= SUPPLIERS (Nhà cung cấp - 13 total) =============
+export const mockSuppliers = [
+  // Nhóm Nông nghiệp Đà Lạt (3 NCC)
+  { id: "sup-001", name: "NCC Rau Sạch Đà Lạt - Chi nhánh HCM", groupId: "sg-001", groupName: "Tập đoàn Nông nghiệp Đà Lạt" },
+  { id: "sup-002", name: "NCC Hoa Tươi Đà Lạt - Chi nhánh HCM", groupId: "sg-001", groupName: "Tập đoàn Nông nghiệp Đà Lạt" },
+  { id: "sup-003", name: "NCC Trái cây Đà Lạt - Chi nhánh HCM", groupId: "sg-001", groupName: "Tập đoàn Nông nghiệp Đà Lạt" },
+  
+  // Nhóm Hóa chất Central (3 NCC)
+  { id: "sup-004", name: "NCC Phân bón Central - Miền Nam", groupId: "sg-002", groupName: "Tập đoàn Hóa chất Central" },
+  { id: "sup-005", name: "NCC Thuốc BVTV Central - Miền Nam", groupId: "sg-002", groupName: "Tập đoàn Hóa chất Central" },
+  { id: "sup-006", name: "NCC Hóa chất Central - Miền Nam", groupId: "sg-002", groupName: "Tập đoàn Hóa chất Central" },
+  
+  // Nhóm Thép Hòa Phát (3 NCC)
+  { id: "sup-007", name: "NCC Thép Hòa Phát - Khu vực HCM", groupId: "sg-003", groupName: "Tập đoàn Thép Hòa Phát" },
+  { id: "sup-008", name: "NCC Xi măng Hòa Phát - Khu vực HCM", groupId: "sg-003", groupName: "Tập đoàn Thép Hòa Phát" },
+  { id: "sup-009", name: "NCC Vật liệu Hòa Phát - Khu vực HCM", groupId: "sg-003", groupName: "Tập đoàn Thép Hòa Phát" },
+  
+  // NCC độc lập (10 NCC)
+  { id: "sup-010", name: "Công ty TNHH Vật tư Y tế Hà Thành", groupId: null, groupName: null },
+  { id: "sup-011", name: "NCC Thiết bị điện Phương Nam", groupId: null, groupName: null },
+  { id: "sup-012", name: "Công ty CP Văn phòng phẩm Thiên Long", groupId: null, groupName: null },
+  { id: "sup-013", name: "NCC Dụng cụ nhà bếp Inox Đại Thành", groupId: null, groupName: null },
+  { id: "sup-014", name: "Công ty TNHH Đồ uống Sài Gòn", groupId: null, groupName: null },
+  { id: "sup-015", name: "NCC Bao bì nhựa Tân Tiến", groupId: null, groupName: null },
+  { id: "sup-016", name: "Công ty CP Dầu thực vật Cái Lân", groupId: null, groupName: null },
+  { id: "sup-017", name: "NCC Thực phẩm đông lạnh Hải Âu", groupId: null, groupName: null },
+  { id: "sup-018", name: "Công ty TNHH Gia vị Việt Nam", groupId: null, groupName: null },
+  { id: "sup-019", name: "NCC Nước giải khát Coca-Cola VN", groupId: null, groupName: null }
+]
+
+// ============= PURCHASE ORDERS (Đơn mua hàng - 25 đơn) =============
+export const mockPurchaseOrders = [
+  // Nhóm Nông nghiệp Đà Lạt (8 đơn)
+  { id: "po-001", maDon: "PO-001", supplier: "NCC Rau Sạch Đà Lạt - Chi nhánh HCM", supplierId: "sup-001", amount: 5000000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-01" },
+  { id: "po-002", maDon: "PO-002", supplier: "NCC Rau Sạch Đà Lạt - Chi nhánh HCM", supplierId: "sup-001", amount: 6500000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-03" },
+  { id: "po-003", maDon: "PO-003", supplier: "NCC Hoa Tươi Đà Lạt - Chi nhánh HCM", supplierId: "sup-002", amount: 8000000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-02" },
+  { id: "po-004", maDon: "PO-004", supplier: "NCC Hoa Tươi Đà Lạt - Chi nhánh HCM", supplierId: "sup-002", amount: 7000000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-05" },
+  { id: "po-005", maDon: "PO-005", supplier: "NCC Trái cây Đà Lạt - Chi nhánh HCM", supplierId: "sup-003", amount: 12000000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2025-12-28" },
+  { id: "po-006", maDon: "PO-006", supplier: "NCC Trái cây Đà Lạt - Chi nhánh HCM", supplierId: "sup-003", amount: 9500000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-04" },
+  { id: "po-007", maDon: "PO-007", supplier: "NCC Rau Sạch Đà Lạt - Chi nhánh HCM", supplierId: "sup-001", amount: 5500000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2025-12-30" },
+  { id: "po-008", maDon: "PO-008", supplier: "NCC Hoa Tươi Đà Lạt - Chi nhánh HCM", supplierId: "sup-002", amount: 8500000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-06" },
+  
+  // Nhóm Hóa chất Central (6 đơn)
+  { id: "po-009", maDon: "PO-009", supplier: "NCC Phân bón Central - Miền Nam", supplierId: "sup-004", amount: 15000000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2025-12-29" },
+  { id: "po-010", maDon: "PO-010", supplier: "NCC Thuốc BVTV Central - Miền Nam", supplierId: "sup-005", amount: 11000000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-02" },
+  { id: "po-011", maDon: "PO-011", supplier: "NCC Hóa chất Central - Miền Nam", supplierId: "sup-006", amount: 13500000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-04" },
+  { id: "po-012", maDon: "PO-012", supplier: "NCC Phân bón Central - Miền Nam", supplierId: "sup-004", amount: 16000000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-07" },
+  { id: "po-013", maDon: "PO-013", supplier: "NCC Thuốc BVTV Central - Miền Nam", supplierId: "sup-005", amount: 10500000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2025-12-31" },
+  { id: "po-014", maDon: "PO-014", supplier: "NCC Hóa chất Central - Miền Nam", supplierId: "sup-006", amount: 14000000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-05" },
+  
+  // NCC độc lập (11 đơn)
+  { id: "po-015", maDon: "PO-015", supplier: "Công ty TNHH Vật tư Y tế Hà Thành", supplierId: "sup-010", amount: 18000000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-01" },
+  { id: "po-016", maDon: "PO-016", supplier: "NCC Thiết bị điện Phương Nam", supplierId: "sup-011", amount: 9000000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-03" },
+  { id: "po-017", maDon: "PO-017", supplier: "Công ty CP Văn phòng phẩm Thiên Long", supplierId: "sup-012", amount: 4500000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2025-12-28" },
+  { id: "po-018", maDon: "PO-018", supplier: "NCC Dụng cụ nhà bếp Inox Đại Thành", supplierId: "sup-013", amount: 7200000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-02" },
+  { id: "po-019", maDon: "PO-019", supplier: "Công ty TNHH Đồ uống Sài Gòn", supplierId: "sup-014", amount: 22000000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-06" },
+  { id: "po-020", maDon: "PO-020", supplier: "NCC Bao bì nhựa Tân Tiến", supplierId: "sup-015", amount: 6800000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-04" },
+  { id: "po-021", maDon: "PO-021", supplier: "Công ty CP Dầu thực vật Cái Lân", supplierId: "sup-016", amount: 25000000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2025-12-30" },
+  { id: "po-022", maDon: "PO-022", supplier: "NCC Thực phẩm đông lạnh Hải Âu", supplierId: "sup-017", amount: 19500000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-05" },
+  { id: "po-023", maDon: "PO-023", supplier: "Công ty TNHH Gia vị Việt Nam", supplierId: "sup-018", amount: 8900000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-07" },
+  { id: "po-024", maDon: "PO-024", supplier: "NCC Nước giải khát Coca-Cola VN", supplierId: "sup-019", amount: 35000000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-01" },
+  { id: "po-025", maDon: "PO-025", supplier: "Công ty TNHH Vật tư Y tế Hà Thành", supplierId: "sup-010", amount: 17000000, status: "DA_DOI_CHIEU", paymentProposalId: null, createdDate: "2026-01-08" },
+  
+  // Đơn chưa đối chiếu
+  { id: "po-999", maDon: "PO-999", supplier: "NCC Test", supplierId: "sup-999", amount: 1000000, status: "MOI", paymentProposalId: null, createdDate: "2026-01-08" },
+  
+  // Đơn đã gom vào PP
+  { id: "po-888", maDon: "PO-888", supplier: "NCC Thép Hòa Phát - Khu vực HCM", supplierId: "sup-007", amount: 20000000, status: "CHO_THANH_TOAN", paymentProposalId: "pp-001", createdDate: "2025-12-25" },
+  { id: "po-889", maDon: "PO-889", supplier: "NCC Thép Hòa Phát - Khu vực HCM", supplierId: "sup-007", amount: 30000000, status: "CHO_THANH_TOAN", paymentProposalId: "pp-001", createdDate: "2025-12-26" }
+]
+
+// ============= SALES ORDERS (Đơn bán hàng - 25 đơn) =============
 export const mockSalesOrders = [
-  // Đơn chưa gom
-  { 
-    id: "so-100", 
-    maDon: "SO-100", 
-    customer: "Hệ thống Siêu thị WinMart",
-    customerId: "cus-001",
-    amount: 8000000, 
-    status: "DA_DOI_CHIEU",
-    arDocumentId: null
-  },
-  { 
-    id: "so-101", 
-    maDon: "SO-101", 
-    customer: "Hệ thống Siêu thị WinMart",
-    customerId: "cus-001",
-    amount: 9000000, 
-    status: "DA_DOI_CHIEU",
-    arDocumentId: null
-  },
-  { 
-    id: "so-102", 
-    maDon: "SO-102", 
-    customer: "Hệ thống Siêu thị WinMart",
-    customerId: "cus-001",
-    amount: 8000000, 
-    status: "DA_DOI_CHIEU",
-    arDocumentId: null
-  },
-  { 
-    id: "so-200", 
-    maDon: "SO-200", 
-    customer: "Cửa hàng Thực phẩm Sạch B",
-    customerId: "cus-002",
-    amount: 6000000, 
-    status: "DA_DOI_CHIEU",
-    arDocumentId: null
-  },
-  { 
-    id: "so-201", 
-    maDon: "SO-201", 
-    customer: "Cửa hàng Thực phẩm Sạch B",
-    customerId: "cus-002",
-    amount: 4000000, 
-    status: "DA_DOI_CHIEU",
-    arDocumentId: null
-  },
-  // Đơn đã gom vào AR
-  { 
-    id: "so-111", 
-    maDon: "SO-111", 
-    customer: "Cửa hàng Thực phẩm Sạch A",
-    customerId: "cus-003",
-    amount: 15000000, 
-    status: "CHO_THU_TIEN",
-    arDocumentId: "ar-001"
-  }
+  // Nhóm WinCommerce (9 đơn)
+  { id: "so-001", maDon: "SO-001", customer: "WinMart - Chi nhánh Quận 1", customerId: "cus-001", amount: 8000000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-01" },
+  { id: "so-002", maDon: "SO-002", customer: "WinMart - Chi nhánh Quận 1", customerId: "cus-001", amount: 9500000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-03" },
+  { id: "so-003", maDon: "SO-003", customer: "WinMart - Chi nhánh Quận 3", customerId: "cus-002", amount: 7200000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-02" },
+  { id: "so-004", maDon: "SO-004", customer: "WinMart - Chi nhánh Quận 3", customerId: "cus-002", amount: 8800000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-05" },
+  { id: "so-005", maDon: "SO-005", customer: "WinMart - Chi nhánh Bình Thạnh", customerId: "cus-003", amount: 10000000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2025-12-28" },
+  { id: "so-006", maDon: "SO-006", customer: "WinMart - Chi nhánh Quận 1", customerId: "cus-001", amount: 8500000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-04" },
+  { id: "so-007", maDon: "SO-007", customer: "WinMart - Chi nhánh Quận 3", customerId: "cus-002", amount: 9000000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2025-12-30" },
+  { id: "so-008", maDon: "SO-008", customer: "WinMart - Chi nhánh Bình Thạnh", customerId: "cus-003", amount: 11000000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-06" },
+  { id: "so-009", maDon: "SO-009", customer: "WinMart - Chi nhánh Quận 1", customerId: "cus-001", amount: 7800000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-07" },
+  
+  // Nhóm Saigon Co.op (6 đơn)
+  { id: "so-010", maDon: "SO-010", customer: "Co.opMart - Chi nhánh Tân Bình", customerId: "cus-004", amount: 12000000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2025-12-29" },
+  { id: "so-011", maDon: "SO-011", customer: "Co.opMart - Chi nhánh Gò Vấp", customerId: "cus-005", amount: 9800000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-02" },
+  { id: "so-012", maDon: "SO-012", customer: "Co.opMart - Chi nhánh Thủ Đức", customerId: "cus-006", amount: 13500000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-04" },
+  { id: "so-013", maDon: "SO-013", customer: "Co.opMart - Chi nhánh Tân Bình", customerId: "cus-004", amount: 11500000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-07" },
+  { id: "so-014", maDon: "SO-014", customer: "Co.opMart - Chi nhánh Gò Vấp", customerId: "cus-005", amount: 10200000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2025-12-31" },
+  { id: "so-015", maDon: "SO-015", customer: "Co.opMart - Chi nhánh Thủ Đức", customerId: "cus-006", amount: 14000000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-05" },
+  
+  // Khách hàng độc lập (10 đơn)
+  { id: "so-016", maDon: "SO-016", customer: "Cửa hàng Thực phẩm Sạch An Nhiên", customerId: "cus-010", amount: 6000000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-01" },
+  { id: "so-017", maDon: "SO-017", customer: "Siêu thị Mini Bách Hóa Xanh", customerId: "cus-011", amount: 4500000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-03" },
+  { id: "so-018", maDon: "SO-018", customer: "Nhà hàng Món Ngon Quê Hương", customerId: "cus-012", amount: 7800000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2025-12-28" },
+  { id: "so-019", maDon: "SO-019", customer: "Khách sạn Sunrise Palace", customerId: "cus-013", amount: 15000000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-02" },
+  { id: "so-020", maDon: "SO-020", customer: "Trường MN Hoa Mai", customerId: "cus-014", amount: 3200000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-06" },
+  { id: "so-021", maDon: "SO-021", customer: "Bệnh viện Đa khoa Tâm Đức", customerId: "cus-015", amount: 25000000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-04" },
+  { id: "so-022", maDon: "SO-022", customer: "Công ty TNHH Thương mại Phát Đạt", customerId: "cus-016", amount: 18000000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2025-12-30" },
+  { id: "so-023", maDon: "SO-023", customer: "Quán Cafe The Coffee House", customerId: "cus-017", amount: 5500000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-05" },
+  { id: "so-024", maDon: "SO-024", customer: "Cửa hàng Tiện lợi GS25", customerId: "cus-018", amount: 6800000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-07" },
+  { id: "so-025", maDon: "SO-025", customer: "Nhà hàng Lẩu Hải Sản Biển Đông", customerId: "cus-019", amount: 12500000, status: "DA_DOI_CHIEU", arDocumentId: null, createdDate: "2026-01-01" },
+  
+  // Đơn đã gom vào AR (Nhóm AEON)
+  { id: "so-111", maDon: "SO-111", customer: "AEON Mall Tân Phú", customerId: "cus-007", amount: 15000000, status: "CHO_THU_TIEN", arDocumentId: "ar-001", createdDate: "2025-12-25" }
 ]
 
 // ============= PAYMENT PROPOSALS (Đề xuất thanh toán) =============
@@ -185,48 +207,94 @@ export const mockPhieuThuChi = [
 
 // ============= API MOCK =============
 export const mockAPI = {
+  // Lấy danh sách nhóm khách hàng
+  getCustomerGroups: async () => {
+    await delay(200)
+    return mockCustomerGroups
+  },
+
+  // Lấy danh sách nhóm nhà cung cấp
+  getSupplierGroups: async () => {
+    await delay(200)
+    return mockSupplierGroups
+  },
+
   // Lấy PO chưa gom (DA_DOI_CHIEU và chưa có PP)
-  getAvailablePurchaseOrders: async (supplierId = null) => {
+  getAvailablePurchaseOrders: async (supplierId = null, fromDate = null, toDate = null, groupId = null) => {
     await delay(300)
     let pos = mockPurchaseOrders.filter(po => 
       po.status === 'DA_DOI_CHIEU' && !po.paymentProposalId
     )
+    
+    // Filter by supplier
     if (supplierId) {
       pos = pos.filter(po => po.supplierId === supplierId)
     }
+    
+    // Filter by group
+    if (groupId) {
+      const supplierIdsInGroup = mockSuppliers
+        .filter(s => s.groupId === groupId)
+        .map(s => s.id)
+      pos = pos.filter(po => supplierIdsInGroup.includes(po.supplierId))
+    }
+    
+    // Filter by date range
+    if (fromDate && toDate) {
+      pos = pos.filter(po => {
+        const poDate = new Date(po.createdDate)
+        const from = new Date(fromDate)
+        const to = new Date(toDate)
+        return poDate >= from && poDate <= to
+      })
+    }
+    
     return pos
   },
 
   // Lấy SO chưa gom (DA_DOI_CHIEU và chưa có AR)
-  getAvailableSalesOrders: async (customerId = null) => {
+  getAvailableSalesOrders: async (customerId = null, fromDate = null, toDate = null, groupId = null) => {
     await delay(300)
     let sos = mockSalesOrders.filter(so => 
       so.status === 'DA_DOI_CHIEU' && !so.arDocumentId
     )
+    
+    // Filter by customer
     if (customerId) {
       sos = sos.filter(so => so.customerId === customerId)
     }
+    
+    // Filter by group
+    if (groupId) {
+      const customerIdsInGroup = mockCustomers
+        .filter(c => c.groupId === groupId)
+        .map(c => c.id)
+      sos = sos.filter(so => customerIdsInGroup.includes(so.customerId))
+    }
+    
+    // Filter by date range
+    if (fromDate && toDate) {
+      sos = sos.filter(so => {
+        const soDate = new Date(so.createdDate)
+        const from = new Date(fromDate)
+        const to = new Date(toDate)
+        return soDate >= from && soDate <= to
+      })
+    }
+    
     return sos
   },
 
   // Lấy danh sách suppliers có PO
   getSuppliers: async () => {
     await delay(200)
-    const suppliers = [...new Set(mockPurchaseOrders.map(po => po.supplierId))]
-    return suppliers.map(id => {
-      const po = mockPurchaseOrders.find(p => p.supplierId === id)
-      return { id, name: po.supplier }
-    })
+    return mockSuppliers
   },
 
   // Lấy danh sách customers có SO
   getCustomers: async () => {
     await delay(200)
-    const customers = [...new Set(mockSalesOrders.map(so => so.customerId))]
-    return customers.map(id => {
-      const so = mockSalesOrders.find(s => s.customerId === id)
-      return { id, name: so.customer }
-    })
+    return mockCustomers
   },
 
   // Tạo Payment Proposal (Gom PO)
@@ -663,6 +731,24 @@ export const mockAPI = {
     // Chưa thu: doanh số - đã thu
     const arPending = salesTotal - arReceived
 
+    // Đếm số lượng AR documents theo trạng thái
+    const arStatusCounts = mockARDocuments.reduce((counts, ar) => {
+      const totalAmount = ar.totalAmount || 0
+      const paidAmount = ar.paidAmount || 0
+      const paymentPercent = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0
+      
+      if (ar.status === 'DA_THU_TIEN' || paymentPercent >= 100) {
+        counts.completed++
+      } else if (paymentPercent > 0) {
+        counts.partial++
+      } else if (ar.status === 'CHO_THU_TIEN') {
+        counts.pending++
+      } else {
+        counts.new++
+      }
+      return counts
+    }, { new: 0, pending: 0, partial: 0, completed: 0 })
+
     // Tính Công nợ Nhà cung cấp (AP)
     // Giá trị mua: tổng của PO đã đối chiếu trở lên
     const purchasesTotal = mockPurchaseOrders
@@ -676,18 +762,38 @@ export const mockAPI = {
     // Chưa chi: giá trị mua - đã chi
     const apPending = purchasesTotal - apPaid
 
+    // Đếm số lượng AP documents theo trạng thái
+    const apStatusCounts = mockPaymentProposals.reduce((counts, pp) => {
+      const totalAmount = pp.totalAmount || 0
+      const paidAmount = pp.paidAmount || 0
+      const paymentPercent = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0
+      
+      if (pp.status === 'DA_THANH_TOAN' || paymentPercent >= 100) {
+        counts.completed++
+      } else if (paymentPercent > 0) {
+        counts.partial++
+      } else if (pp.status === 'CHO_THANH_TOAN') {
+        counts.pending++
+      } else {
+        counts.new++
+      }
+      return counts
+    }, { new: 0, pending: 0, partial: 0, completed: 0 })
+
     return {
       customer_ar: {
         sales: salesTotal,
         received: arReceived,
         pending: arPending,
-        receivedPercent: salesTotal > 0 ? Math.round((arReceived / salesTotal) * 100) : 0
+        receivedPercent: salesTotal > 0 ? Math.round((arReceived / salesTotal) * 100) : 0,
+        statusCounts: arStatusCounts
       },
       supplier_ap: {
         purchases: purchasesTotal,
         paid: apPaid,
         pending: apPending,
-        paidPercent: purchasesTotal > 0 ? Math.round((apPaid / purchasesTotal) * 100) : 0
+        paidPercent: purchasesTotal > 0 ? Math.round((apPaid / purchasesTotal) * 100) : 0,
+        statusCounts: apStatusCounts
       }
     }
   },

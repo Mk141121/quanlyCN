@@ -195,6 +195,7 @@ const PhieuThuChiForm = ({ refId, refType, onBack, onSuccess }) => {
   const isLocked = documentData.status === 'DA_THANH_TOAN' || documentData.status === 'DA_THU_TIEN'
 
   return (
+    <div style={{ padding: '24px', background: 'var(--bg-primary)', minHeight: '100vh' }}>
     <div className="phieu-thu-chi-container">
       <Card className="phieu-thu-chi-card">
         {/* HEADER */}
@@ -414,6 +415,7 @@ const PhieuThuChiForm = ({ refId, refType, onBack, onSuccess }) => {
           </div>
         )}
       </Card>
+    </div>
     </div>
   )
 }

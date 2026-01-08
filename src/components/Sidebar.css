@@ -1,5 +1,5 @@
 /* ============================================
-   GENERAL DASHBOARD - SIDEBAR MENU STYLES
+   SIDEBAR - PERSISTENT MENU
    Modern minimal design inspired by dashboard UI
    ============================================ */
 
@@ -171,7 +171,7 @@
   transform: scale(0.98);
 }
 
-/* Active state (you can add this class dynamically) */
+/* Active state */
 .menu-item.active {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
@@ -230,21 +230,13 @@
 }
 
 /* Light Mode Adjustments */
-.light-mode .menu-card-title {
-  color: #1e293b;
-}
-
-.light-mode .sidebar-title {
-  color: #1e293b;
-}
-
-.light-mode .theme-toggle-sidebar {
+.light-mode .settings-btn {
   color: #1e293b;
   border-color: rgba(0, 0, 0, 0.15);
   background: rgba(0, 0, 0, 0.05);
 }
 
-.light-mode .theme-toggle-sidebar:hover {
+.light-mode .settings-btn:hover {
   background: rgba(0, 0, 0, 0.1);
 }
 
@@ -266,87 +258,78 @@
   background: var(--text-muted);
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .sidebar-title {
-    font-size: 1.125rem;
-  }
-  
-  .section-header h3 {
-    font-size: 1rem;
-  }
-}
-
+/* Mobile Responsive Adjustments */
 @media (max-width: 768px) {
-  /* Typography */
-  h1 {
-    font-size: 22px !important;
+  .sidebar-menu {
+    padding: 16px 12px;
   }
 
-  h2 {
-    font-size: 18px !important;
-  }
-
-  /* Cards spacing */
-  .ant-card {
+  .sidebar-user-header {
+    padding: 10px;
     margin-bottom: 16px;
   }
 
-  /* Statistics adjustments */
-  .ant-statistic-title {
-    font-size: 0.75rem !important;
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
   }
 
-  .ant-statistic-content {
-    font-size: 1.125rem !important;
+  .user-name {
+    font-size: 0.875rem;
   }
 
-  /* Tables */
-  .ant-table {
+  .user-greeting {
+    font-size: 0.7rem;
+  }
+
+  .settings-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+
+  .search-input {
+    height: 38px;
     font-size: 0.8125rem;
   }
 
-  .ant-table-thead > tr > th {
-    padding: 10px 8px;
-    font-size: 0.75rem;
+  .section-label {
+    font-size: 0.625rem;
+    margin-bottom: 6px;
   }
 
-  .ant-table-tbody > tr > td {
-    padding: 8px 8px;
+  .menu-item {
+    padding: 10px 12px;
+    font-size: 0.8125rem;
   }
 
-  /* Row/Col responsive */
-  .ant-row {
-    margin-left: -8px !important;
-    margin-right: -8px !important;
+  .menu-item-icon {
+    font-size: 1.125rem;
+    width: 20px;
+    height: 20px;
   }
 
-  .ant-col {
-    padding-left: 8px !important;
-    padding-right: 8px !important;
+  .menu-section {
+    margin-bottom: 20px;
+  }
+
+  .search-container {
+    margin-bottom: 20px;
   }
 }
 
 @media (max-width: 480px) {
-  h1 {
-    font-size: 18px !important;
+  .sidebar-menu {
+    padding: 12px 10px;
   }
 
-  h2 {
-    font-size: 16px !important;
+  .user-text {
+    gap: 0;
   }
 
-  .ant-statistic-content {
-    font-size: 1rem !important;
-  }
-
-  .ant-card-head-title {
-    font-size: 0.875rem;
-  }
-
-  .ant-btn {
-    padding: 4px 10px;
-    font-size: 0.8125rem;
+  .menu-item-text {
+    font-size: 0.75rem;
   }
 }
 

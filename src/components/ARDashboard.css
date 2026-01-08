@@ -21,10 +21,49 @@
 /* Responsive */
 @media (max-width: 768px) {
   .ar-dashboard-container {
-    padding: 16px;
+    padding: 0;
   }
   
   .ar-dashboard-container .ant-statistic-content {
     font-size: 18px;
   }
+
+  .ar-dashboard-container h2 {
+    font-size: 18px !important;
+  }
+
+  .ant-table {
+    font-size: 0.75rem;
+  }
+
+  .ant-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .ant-row {
+    margin-left: -8px !important;
+    margin-right: -8px !important;
+  }
+
+  .ant-col {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .ant-select,
+  .ant-picker {
+    font-size: 0.8125rem;
+  }
 }
+
+@media (max-width: 480px) {
+  .ar-dashboard-container .ant-statistic-content {
+    font-size: 16px;
+  }
+
+  .ant-btn {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+  }
+}
+

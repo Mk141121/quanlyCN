@@ -83,15 +83,21 @@
 /* Responsive */
 @media (max-width: 768px) {
   .phieu-thu-chi-container {
-    padding: 16px;
+    padding: 0;
   }
   
   .phieu-thu-chi-card {
     border-radius: 8px;
   }
+
+  .form-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
   
   .form-header h2 {
-    font-size: 20px;
+    font-size: 18px;
   }
   
   .items-section h3 {
@@ -101,4 +107,41 @@
   .payment-section {
     padding: 16px;
   }
+
+  .document-info {
+    font-size: 0.8125rem;
+  }
+
+  .ant-descriptions-item-label,
+  .ant-descriptions-item-content {
+    padding: 8px 12px;
+  }
+
+  .ant-table {
+    font-size: 0.75rem;
+  }
+
+  .ant-form-item {
+    margin-bottom: 16px;
+  }
 }
+
+@media (max-width: 480px) {
+  .form-header h2 {
+    font-size: 16px;
+  }
+
+  .items-section h3 {
+    font-size: 14px;
+  }
+
+  .payment-section {
+    padding: 12px;
+  }
+
+  .ant-btn {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+  }
+}
+

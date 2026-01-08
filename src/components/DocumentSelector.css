@@ -41,19 +41,41 @@
 /* Responsive */
 @media (max-width: 768px) {
   .document-selector-container {
-    padding: 16px;
+    padding: 0;
   }
   
   .document-selector-card {
     border-radius: 8px;
   }
   
-  .selector-header h2 {
-    font-size: 20px;
-  }
-  
   .selector-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
   }
+
+  .selector-header h2 {
+    font-size: 18px;
+  }
+
+  .ant-table {
+    font-size: 0.75rem;
+  }
+
+  .ant-table-wrapper {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .selector-header h2 {
+    font-size: 16px;
+  }
+
+  .ant-btn {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+  }
+}
+
 }

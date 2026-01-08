@@ -9,7 +9,10 @@ import {
   Space,
   Tag,
   Radio,
-  Input
+  Input,
+  DatePicker,
+  Row,
+  Col
 } from 'antd'
 import {
   PlusOutlined,
@@ -20,14 +23,19 @@ import {
   FilterOutlined
 } from '@ant-design/icons'
 import { mockAPI } from '../utils/mockAPICongNo'
+import dayjs from 'dayjs'
 import './OrderGrouper.css'
 
 const { Option } = Select
+const { RangePicker } = DatePicker
 
 const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
   const [loading, setLoading] = useState(false)
   const [partners, setPartners] = useState([])
+  const [groups, setGroups] = useState([])
   const [selectedPartner, setSelectedPartner] = useState(null)
+  const [selectedGroup, setSelectedGroup] = useState(null)
+  const [dateRange, setDateRange] = useState([dayjs().subtract(30, 'days'), dayjs()])
   const [availableOrders, setAvailableOrders] = useState([])
   const [selectedOrderIds, setSelectedOrderIds] = useState([])
   const [submitting, setSubmitting] = useState(false)
@@ -119,13 +127,12 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
 
   useEffect(() => {
     loadPartners()
+    loadGroups()
   }, [type])
 
   useEffect(() => {
-    if (selectedPartner) {
-      loadAvailableOrders()
-    }
-  }, [selectedPartner, type])
+    loadAvailableOrders()
+  }, [selectedPartner, selectedGroup, dateRange, type])
 
   const loadPartners = async () => {
     setLoading(true)
@@ -134,9 +141,6 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
         ? await mockAPI.getSuppliers() 
         : await mockAPI.getCustomers()
       setPartners(data)
-      setSelectedPartner(null)
-      setAvailableOrders([])
-      setSelectedOrderIds([])
     } catch (error) {
       message.error('Không thể load danh sách: ' + error.message)
     } finally {
@@ -144,15 +148,35 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
     }
   }
 
-  const loadAvailableOrders = async () => {
-    setLoading(true)
+  const loadGroups = async () => {
     try {
       const data = type === 'AP'
-        ? await mockAPI.getAvailablePurchaseOrders(selectedPartner.id)
-        : await mockAPI.getAvailableSalesOrders(selectedPartner.id)
+        ? await mockAPI.getSupplierGroups()
+        : await mockAPI.getCustomerGroups()
+      setGroups(data)
+    } catch (error) {
+      message.error('Không thể load danh sách nhóm: ' + error.message)
+    }
+  }
+
+  const loadAvailableOrders = async () => {
+    // Chỉ load khi có ít nhất 1 filter được chọn
+    if (!selectedPartner && !selectedGroup && !dateRange) {
+      setAvailableOrders([])
+      return
+    }
+
+    setLoading(true)
+    try {
+      const fromDate = dateRange?.[0]?.format('YYYY-MM-DD')
+      const toDate = dateRange?.[1]?.format('YYYY-MM-DD')
+      
+      const data = type === 'AP'
+        ? await mockAPI.getAvailablePurchaseOrders(selectedPartner?.id, fromDate, toDate, selectedGroup)
+        : await mockAPI.getAvailableSalesOrders(selectedPartner?.id, fromDate, toDate, selectedGroup)
       
       if (data.length === 0) {
-        message.warning(`Không có ${type === 'AP' ? 'PO' : 'SO'} nào ở trạng thái ĐÃ ĐỐI CHIẾU`)
+        message.info(`Không tìm thấy ${type === 'AP' ? 'PO' : 'SO'} nào phù hợp với điều kiện lọc`)
       }
       
       setAvailableOrders(data)
@@ -169,15 +193,30 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
       title: 'Mã đơn',
       dataIndex: 'maDon',
       key: 'maDon',
-      width: 150,
+      width: 120,
       render: (text) => <strong>{text}</strong>,
       ...getColumnSearchProps('maDon', 'mã đơn')
+    },
+    {
+      title: 'Ngày tạo',
+      dataIndex: 'createdDate',
+      key: 'createdDate',
+      width: 120,
+      render: (date) => dayjs(date).format('DD/MM/YYYY')
+    },
+    {
+      title: type === 'AP' ? 'Nhà cung cấp' : 'Khách hàng',
+      dataIndex: type === 'AP' ? 'supplier' : 'customer',
+      key: 'partner',
+      width: 250,
+      ellipsis: true,
+      render: (text) => <span>{text}</span>
     },
     {
       title: 'Số tiền',
       dataIndex: 'amount',
       key: 'amount',
-      width: 180,
+      width: 150,
       align: 'right',
       render: (amount) => (
         <span style={{ fontSize: 16, fontWeight: 500 }}>
@@ -191,7 +230,7 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      width: 150,
+      width: 130,
       render: (status) => (
         <Tag color="blue">{status}</Tag>
       ),
@@ -250,6 +289,7 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
   }
 
   return (
+    <div style={{ padding: '24px', background: 'var(--bg-primary)', minHeight: '100vh' }}>
     <div className="order-grouper-container">
       <Card className="order-grouper-card">
         {/* Header */}
@@ -265,31 +305,104 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
 
         {/* Partner selector */}
         <div className="partner-section">
-          <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-            Chọn {type === 'AP' ? 'Nhà cung cấp' : 'Khách hàng'}:
-          </label>
-          <Select
-            showSearch
-            filterOption={(input, option) =>
-              (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
-            }
-            style={{ width: '100%', maxWidth: 500 }}
-            placeholder={`Chọn ${type === 'AP' ? 'nhà cung cấp' : 'khách hàng'}`}
-            onChange={(value) => {
-              const partner = partners.find(p => p.id === value)
-              setSelectedPartner(partner)
-            }}
-            value={selectedPartner?.id}
-            size="large"
-          >
-            {partners.map(p => (
-              <Option key={p.id} value={p.id}>{p.name}</Option>
-            ))}
-          </Select>
+          <Row gutter={16}>
+            <Col span={8}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
+                Khoảng ngày <span style={{ color: 'red' }}>*</span>
+              </label>
+              <RangePicker
+                value={dateRange}
+                onChange={setDateRange}
+                format="DD/MM/YYYY"
+                style={{ width: '100%' }}
+                size="large"
+                placeholder={['Từ ngày', 'Đến ngày']}
+              />
+            </Col>
+
+            <Col span={8}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
+                Nhóm {type === 'AP' ? 'nhà cung cấp' : 'khách hàng'}
+              </label>
+              <Select
+                allowClear
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+                style={{ width: '100%' }}
+                placeholder={`Chọn nhóm ${type === 'AP' ? 'nhà cung cấp' : 'khách hàng'}`}
+                onChange={(value) => {
+                  setSelectedGroup(value)
+                  setSelectedPartner(null)
+                }}
+                value={selectedGroup}
+                size="large"
+              >
+                {groups.map(g => (
+                  <Option key={g.id} value={g.id}>
+                    {g.name}
+                  </Option>
+                ))}
+              </Select>
+            </Col>
+
+            <Col span={8}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
+                {type === 'AP' ? 'Nhà cung cấp' : 'Khách hàng'} cụ thể
+              </label>
+              <Select
+                allowClear
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+                style={{ width: '100%' }}
+                placeholder={`Chọn ${type === 'AP' ? 'nhà cung cấp' : 'khách hàng'}`}
+                onChange={(value) => {
+                  const partner = partners.find(p => p.id === value)
+                  setSelectedPartner(partner)
+                }}
+                value={selectedPartner?.id}
+                size="large"
+              >
+                {partners
+                  .filter(p => !selectedGroup || p.groupId === selectedGroup)
+                  .map(p => (
+                    <Option key={p.id} value={p.id}>
+                      {p.name} {p.groupName && <Tag color="blue" style={{ marginLeft: 4 }}>{p.groupName}</Tag>}
+                    </Option>
+                  ))}
+              </Select>
+            </Col>
+          </Row>
+
+          <div style={{ marginTop: 16 }}>
+            <Space>
+              <Tag color="blue" icon={<FilterOutlined />}>
+                {availableOrders.length} đơn hàng tìm thấy
+              </Tag>
+              {selectedGroup && (
+                <Tag color="purple">
+                  Nhóm: {groups.find(g => g.id === selectedGroup)?.name}
+                </Tag>
+              )}
+              {selectedPartner && (
+                <Tag color="cyan">
+                  {selectedPartner.name}
+                </Tag>
+              )}
+              {dateRange && dateRange[0] && dateRange[1] && (
+                <Tag color="orange">
+                  {dateRange[0].format('DD/MM/YYYY')} - {dateRange[1].format('DD/MM/YYYY')}
+                </Tag>
+              )}
+            </Space>
+          </div>
         </div>
 
         {/* Orders table */}
-        {selectedPartner && (
+        {availableOrders.length > 0 && (
           <>
             <div style={{ margin: '24px 0' }}>
               <Tag color="blue" style={{ fontSize: 14, padding: '4px 12px' }}>
@@ -350,13 +463,16 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
         <div className="info-box">
           <h4>ℹ️ Lưu ý:</h4>
           <ul>
+            <li>Chọn <strong>Khoảng ngày</strong> để lọc đơn hàng theo thời gian</li>
+            <li>Chọn <strong>Nhóm</strong> để xem tất cả đơn hàng của các {type === 'AP' ? 'nhà cung cấp' : 'khách hàng'} trong nhóm</li>
+            <li>Hoặc chọn <strong>{type === 'AP' ? 'Nhà cung cấp' : 'Khách hàng'} cụ thể</strong> để xem đơn hàng của một đối tác</li>
             <li>Chỉ hiển thị đơn hàng ở trạng thái <strong>ĐÃ ĐỐI CHIẾU</strong></li>
-            <li>Chọn nhiều đơn hàng của cùng 1 {type === 'AP' ? 'nhà cung cấp' : 'khách hàng'}</li>
             <li>Tổng tiền sẽ được tự động tính và khóa</li>
             <li>Sau khi tạo, các đơn hàng sẽ bị <strong>KHÓA</strong> không cho sửa/xóa</li>
           </ul>
         </div>
       </Card>
+    </div>
     </div>
   )
 }

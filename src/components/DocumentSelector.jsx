@@ -328,6 +328,7 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
   }
 
   return (
+    <div style={{ padding: '24px', background: 'var(--bg-primary)', minHeight: '100vh' }}>
     <div className="document-selector-container">
       <Card className="document-selector-card">
         <div className="selector-header">
@@ -355,6 +356,7 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
           />
         </Spin>
       </Card>
+    </div>
     </div>
   )
 }

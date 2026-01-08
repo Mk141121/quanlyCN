@@ -235,6 +235,7 @@ const ARDashboard = ({ onBack }) => {
   }), { totalSales: 0, accountingAR: 0, paid: 0, remaining: 0 })
 
   return (
+    <div style={{ padding: '24px', background: 'var(--bg-primary)', minHeight: '100vh' }}>
     <div className="ar-dashboard-container">
       <Card>
         {/* Header */}
@@ -376,6 +377,7 @@ const ARDashboard = ({ onBack }) => {
           />
         </Drawer>
       </Card>
+    </div>
     </div>
   )
 }

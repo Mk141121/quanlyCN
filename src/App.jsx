@@ -5,6 +5,7 @@ import PhieuThuChiForm from './components/PhieuThuChiForm'
 import ARDashboard from './components/ARDashboard'
 import APDashboard from './components/APDashboard'
 import GeneralDashboard from './components/GeneralDashboard'
+import Sidebar from './components/Sidebar'
 import './App.css'
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
   const [selectedDocument, setSelectedDocument] = useState(null)
   const [currentType, setCurrentType] = useState(null) // AP or AR
   const [darkMode, setDarkMode] = useState(true) // Mặc định dark mode
+  const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile sidebar toggle
 
   const handleSelectDocument = (doc) => {
     setSelectedDocument(doc)
@@ -28,10 +30,16 @@ function App() {
     setSelectedDocument(null)
   }
 
-  // Gom đơn hàng
-  if (view === 'grouper') {
-    return (
-      <div className="app">
+  const handleNavigate = (targetView, type) => {
+    if (type) setCurrentType(type)
+    setView(targetView)
+    setSelectedDocument(null) // Clear any selected document when navigating
+  }
+
+  const renderMainContent = () => {
+    // Gom đơn hàng
+    if (view === 'grouper') {
+      return (
         <OrderGrouper 
           type={currentType}
           onBack={handleBack}
@@ -39,72 +47,93 @@ function App() {
             setView('general-dashboard')
           }}
         />
-      </div>
-    )
-  }
+      )
+    }
 
-  // Chọn chứng từ thanh toán
-  if (view === 'selector') {
-    return (
-      <div className="app">
+    // Chọn chứng từ thanh toán
+    if (view === 'selector') {
+      return (
         <DocumentSelector 
           type={currentType}
           onSelect={handleSelectDocument}
           onBack={handleBack}
         />
-      </div>
-    )
-  }
+      )
+    }
 
-  // Form thanh toán
-  if (view === 'payment' && selectedDocument) {
-    return (
-      <div className="app">
+    // Form thanh toán
+    if (view === 'payment' && selectedDocument) {
+      return (
         <PhieuThuChiForm
           refId={selectedDocument.refId}
           refType={selectedDocument.refType}
           onBack={() => setView('selector')}
           onSuccess={handleSuccess}
         />
-      </div>
-    )
-  }
+      )
+    }
 
-  // AR Dashboard
-  if (view === 'ar-dashboard') {
-    return (
-      <div className="app">
-        <ARDashboard onBack={handleBack} />
-      </div>
-    )
-  }
+    // AR Dashboard
+    if (view === 'ar-dashboard') {
+      return <ARDashboard onBack={handleBack} />
+    }
 
-  // AP Dashboard
-  if (view === 'ap-dashboard') {
-    return (
-      <div className="app">
-        <APDashboard onBack={handleBack} />
-      </div>
-    )
-  }
+    // AP Dashboard
+    if (view === 'ap-dashboard') {
+      return <APDashboard onBack={handleBack} />
+    }
 
-  // General Dashboard - Tổng hợp (Trang chủ)
-  if (view === 'general-dashboard') {
-    return (
-      <div className={`app ${darkMode ? 'dark-mode' : 'light-mode'}`}>
+    // General Dashboard - Tổng hợp (Trang chủ)
+    if (view === 'general-dashboard') {
+      return (
         <GeneralDashboard 
-          onNavigate={(targetView, type) => {
-            if (type) setCurrentType(type)
-            setView(targetView)
-          }}
+          onNavigate={handleNavigate}
           darkMode={darkMode}
           onToggleDarkMode={() => setDarkMode(!darkMode)}
         />
-      </div>
-    )
+      )
+    }
+
+    return null
   }
 
-  return null
+  return (
+    <div className={`app ${darkMode ? 'dark-mode' : 'light-mode'}`}>
+      {/* Mobile Menu Toggle Button */}
+      <button 
+        className="mobile-menu-toggle"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label="Toggle menu"
+      >
+        {sidebarOpen ? '✕' : '☰'}
+      </button>
+
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div 
+          className="sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <div className="app-layout">
+        <div className={`app-sidebar ${sidebarOpen ? 'open' : ''}`}>
+          <Sidebar 
+            onNavigate={(targetView, type) => {
+              handleNavigate(targetView, type)
+              setSidebarOpen(false) // Close sidebar after navigation on mobile
+            }}
+            darkMode={darkMode}
+            onToggleDarkMode={() => setDarkMode(!darkMode)}
+            currentView={view}
+          />
+        </div>
+        <div className="app-main">
+          {renderMainContent()}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default App
