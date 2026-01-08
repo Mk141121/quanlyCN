@@ -68,10 +68,10 @@ function GeneralDashboard({
 
   // Render trạng thái
   const renderStatus = (status, paymentPercent) => {
-    if (status === 'DA_THANH_TOAN') {
+    if (status === 'DA_THANH_TOAN' || status === 'DA_THU_TIEN') {
       return <Tag color="green" icon={<CheckCircleOutlined />}>ĐÃ THANH TOÁN</Tag>
     }
-    if (status === 'PARTIAL') {
+    if (paymentPercent > 0 && paymentPercent < 100) {
       return <Tag color="pink" icon={<ClockCircleOutlined />}>ĐÃ TT {paymentPercent}%</Tag>
     }
     if (status === 'CHO_THU_TIEN' || status === 'CHO_THANH_TOAN') {
@@ -164,9 +164,10 @@ function GeneralDashboard({
           <Input
             placeholder={`${placeholder} từ`}
             type="number"
-            value={selectedKeys[0]?.min}
+            value={selectedKeys[0]?.min || ''}
             onChange={e => {
-              const newValue = { ...selectedKeys[0], min: e.target.value }
+              const currentValue = selectedKeys[0] || {}
+              const newValue = { ...currentValue, min: e.target.value }
               setSelectedKeys([newValue])
             }}
             style={{ width: 150 }}
@@ -174,9 +175,10 @@ function GeneralDashboard({
           <Input
             placeholder={`${placeholder} đến`}
             type="number"
-            value={selectedKeys[0]?.max}
+            value={selectedKeys[0]?.max || ''}
             onChange={e => {
-              const newValue = { ...selectedKeys[0], max: e.target.value }
+              const currentValue = selectedKeys[0] || {}
+              const newValue = { ...currentValue, max: e.target.value }
               setSelectedKeys([newValue])
             }}
             style={{ width: 150 }}
@@ -575,7 +577,7 @@ function GeneralDashboard({
               onClick={() => onNavigate('grouper', 'AR')}
             >
               <span className="menu-item-icon">💼</span>
-              <span className="menu-item-text">Xác nhẫn Công nợ</span>
+              <span className="menu-item-text">Xác nhận Công nợ</span>
               <span className="menu-item-dots">⋮</span>
             </button>
 

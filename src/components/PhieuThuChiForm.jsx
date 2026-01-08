@@ -65,7 +65,7 @@ const PhieuThuChiForm = ({ refId, refType, onBack, onSuccess }) => {
       setDocumentData(data)
       // Auto-fill số tiền còn nợ
       const remaining = data.totalAmount - (data.paidAmount || 0)
-      setSoTienThanhToan(remaining)
+      setSoTienThanhToan(remaining > 0 ? remaining : 0)
     } catch (error) {
       message.error('Không thể load dữ liệu: ' + error.message)
     } finally {
@@ -147,7 +147,7 @@ const PhieuThuChiForm = ({ refId, refType, onBack, onSuccess }) => {
     }
 
     // VALIDATION: Số tiền thanh toán phải > 0
-    if (soTienThanhToan <= 0) {
+    if (!soTienThanhToan || soTienThanhToan <= 0) {
       message.error('Số tiền thanh toán phải lớn hơn 0!')
       return
     }
@@ -192,7 +192,7 @@ const PhieuThuChiForm = ({ refId, refType, onBack, onSuccess }) => {
     return <Card>Không tìm thấy dữ liệu</Card>
   }
 
-  const isLocked = documentData.status === 'DA_THANH_TOAN'
+  const isLocked = documentData.status === 'DA_THANH_TOAN' || documentData.status === 'DA_THU_TIEN'
 
   return (
     <div className="phieu-thu-chi-container">
@@ -321,7 +321,7 @@ const PhieuThuChiForm = ({ refId, refType, onBack, onSuccess }) => {
               <InputNumber
                 value={soTienThanhToan}
                 onChange={setSoTienThanhToan}
-                min={0}
+                min={1}
                 max={documentData.totalAmount - (documentData.paidAmount || 0)}
                 formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                 parser={(value) => value.replace(/\$\s?|(,*)/g, '')}

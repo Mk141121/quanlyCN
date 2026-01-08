@@ -72,9 +72,10 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
           <Input
             placeholder={`${placeholder} từ`}
             type="number"
-            value={selectedKeys[0]?.min}
+            value={selectedKeys[0]?.min || ''}
             onChange={e => {
-              const newValue = { ...selectedKeys[0], min: e.target.value }
+              const currentValue = selectedKeys[0] || {}
+              const newValue = { ...currentValue, min: e.target.value }
               setSelectedKeys([newValue])
             }}
             style={{ width: 150 }}
@@ -82,9 +83,10 @@ const OrderGrouper = ({ type = 'AP', onBack, onSuccess }) => {
           <Input
             placeholder={`${placeholder} đến`}
             type="number"
-            value={selectedKeys[0]?.max}
+            value={selectedKeys[0]?.max || ''}
             onChange={e => {
-              const newValue = { ...selectedKeys[0], max: e.target.value }
+              const currentValue = selectedKeys[0] || {}
+              const newValue = { ...currentValue, max: e.target.value }
               setSelectedKeys([newValue])
             }}
             style={{ width: 150 }}

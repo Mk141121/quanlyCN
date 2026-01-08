@@ -371,8 +371,27 @@ export const mockAPI = {
     }
 
     // VALIDATION: Số tiền phải > 0
-    if (data.soTien <= 0) {
+    if (!data.soTien || data.soTien <= 0) {
       throw new Error('Số tiền thanh toán phải lớn hơn 0')
+    }
+
+    // VALIDATION: Kiểm tra số tiền không vượt quá remaining
+    if (data.refType === 'PaymentProposal') {
+      const pp = mockPaymentProposals.find(p => p.id === data.refId)
+      if (pp) {
+        const remaining = pp.totalAmount - (pp.paidAmount || 0)
+        if (data.soTien > remaining) {
+          throw new Error(`Số tiền vượt quá số tiền còn nợ (${remaining.toLocaleString()} VND)`)
+        }
+      }
+    } else if (data.refType === 'ARDocument') {
+      const ar = mockARDocuments.find(a => a.id === data.refId)
+      if (ar) {
+        const remaining = ar.totalAmount - (ar.paidAmount || 0)
+        if (data.soTien > remaining) {
+          throw new Error(`Số tiền vượt quá số tiền còn nợ (${remaining.toLocaleString()} VND)`)
+        }
+      }
     }
 
     // TRANSACTION: 4 tầng cập nhật (hỗ trợ thanh toán 1 phần)
@@ -632,25 +651,29 @@ export const mockAPI = {
     await delay(300)
     
     // Tính Công nợ Khách hàng (AR)
+    // Doanh số: tổng của SO đã đối chiếu trở lên
     const salesTotal = mockSalesOrders
-      .filter(so => so.status === 'DA_DOI_CHIEU' || so.status === 'CHO_THU_TIEN' || so.status === 'DA_THANH_TOAN')
+      .filter(so => ['DA_DOI_CHIEU', 'CHO_THU_TIEN', 'DA_THU_TIEN'].includes(so.status))
       .reduce((sum, so) => sum + so.amount, 0)
     
+    // Đã thu: tổng paidAmount của AR Documents
     const arReceived = mockARDocuments
-      .filter(ar => ar.status === 'DA_THANH_TOAN')
-      .reduce((sum, ar) => sum + (ar.paidAmount || ar.amount), 0)
+      .reduce((sum, ar) => sum + (ar.paidAmount || 0), 0)
     
+    // Chưa thu: doanh số - đã thu
     const arPending = salesTotal - arReceived
 
     // Tính Công nợ Nhà cung cấp (AP)
+    // Giá trị mua: tổng của PO đã đối chiếu trở lên
     const purchasesTotal = mockPurchaseOrders
-      .filter(po => po.status === 'DA_DOI_CHIEU' || po.status === 'CHO_THANH_TOAN' || po.status === 'DA_THANH_TOAN')
+      .filter(po => ['DA_DOI_CHIEU', 'CHO_THANH_TOAN', 'DA_THANH_TOAN'].includes(po.status))
       .reduce((sum, po) => sum + po.amount, 0)
     
+    // Đã chi: tổng paidAmount của Payment Proposals
     const apPaid = mockPaymentProposals
-      .filter(pp => pp.status === 'DA_THANH_TOAN')
-      .reduce((sum, pp) => sum + (pp.paidAmount || pp.amount), 0)
+      .reduce((sum, pp) => sum + (pp.paidAmount || 0), 0)
     
+    // Chưa chi: giá trị mua - đã chi
     const apPending = purchasesTotal - apPaid
 
     return {

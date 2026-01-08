@@ -2,6 +2,7 @@
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
+  padding: 20px;
 }
 
 .phieu-thu-chi-card {
@@ -77,4 +78,27 @@
   background-color: #52c41a;
   border-color: #52c41a;
   color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .phieu-thu-chi-container {
+    padding: 16px;
+  }
+  
+  .phieu-thu-chi-card {
+    border-radius: 8px;
+  }
+  
+  .form-header h2 {
+    font-size: 20px;
+  }
+  
+  .items-section h3 {
+    font-size: 16px;
+  }
+  
+  .payment-section {
+    padding: 16px;
+  }
 }

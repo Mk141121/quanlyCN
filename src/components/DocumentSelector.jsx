@@ -18,17 +18,18 @@ const STATUS_COLORS = {
 const STATUS_LABELS = {
   CHO_THANH_TOAN: 'Chờ thanh toán',
   CHO_THU_TIEN: 'Chờ thu tiền',
-  DA_THANH_TOAN: 'Đã thanh toán'
+  DA_THANH_TOAN: 'Đã thanh toán',
+  DA_THU_TIEN: 'Đã thu tiền'
 }
 
 // Helper: Tính % thanh toán và trạng thái
 const getPaymentStatus = (doc) => {
-  const paidPercent = doc.amount > 0 ? Math.round((doc.paidAmount / doc.amount) * 100) : 0
+  const paidPercent = doc.amount > 0 ? Math.round(((doc.paidAmount || 0) / doc.amount) * 100) : 0
   
   if (paidPercent === 0) {
     return {
       color: doc.status === 'CHO_THANH_TOAN' || doc.status === 'CHO_THU_TIEN' ? STATUS_COLORS.CHO_THANH_TOAN : STATUS_COLORS.CHO_THU_TIEN,
-      label: STATUS_LABELS[doc.status]
+      label: STATUS_LABELS[doc.status] || 'Đang xử lý'
     }
   } else if (paidPercent >= 100) {
     return {
@@ -84,11 +85,18 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
   const getStatusFilterProps = () => ({
     filters: [
       { text: 'Đã thanh toán', value: 'DA_THANH_TOAN' },
+      { text: 'Đã thu tiền', value: 'DA_THU_TIEN' },
       { text: 'Chờ thanh toán', value: 'CHO_THANH_TOAN' },
       { text: 'Chờ thu tiền', value: 'CHO_THU_TIEN' },
       { text: 'Thanh toán 1 phần', value: 'PARTIAL' },
     ],
-    onFilter: (value, record) => record.status === value,
+    onFilter: (value, record) => {
+      if (value === 'PARTIAL') {
+        const paidPercent = record.amount > 0 ? Math.round(((record.paidAmount || 0) / record.amount) * 100) : 0
+        return paidPercent > 0 && paidPercent < 100
+      }
+      return record.status === value
+    },
     filterIcon: filtered => <FilterOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
   })
 
@@ -132,9 +140,10 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
           <Input
             placeholder={`${placeholder} từ`}
             type="number"
-            value={selectedKeys[0]?.min}
+            value={selectedKeys[0]?.min || ''}
             onChange={e => {
-              const newValue = { ...selectedKeys[0], min: e.target.value }
+              const currentValue = selectedKeys[0] || {}
+              const newValue = { ...currentValue, min: e.target.value }
               setSelectedKeys([newValue])
             }}
             style={{ width: 150 }}
@@ -142,9 +151,10 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
           <Input
             placeholder={`${placeholder} đến`}
             type="number"
-            value={selectedKeys[0]?.max}
+            value={selectedKeys[0]?.max || ''}
             onChange={e => {
-              const newValue = { ...selectedKeys[0], max: e.target.value }
+              const currentValue = selectedKeys[0] || {}
+              const newValue = { ...currentValue, max: e.target.value }
               setSelectedKeys([newValue])
             }}
             style={{ width: 150 }}
@@ -301,7 +311,7 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
           size="small"
           icon={<RightOutlined />}
           onClick={() => handleSelect(record)}
-          disabled={record.status === 'DA_THANH_TOAN'}
+          disabled={record.status === 'DA_THANH_TOAN' || record.status === 'DA_THU_TIEN'}
         >
           Chọn
         </Button>

@@ -2,6 +2,7 @@
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
+  padding: 20px;
 }
 
 .order-grouper-card {
@@ -53,4 +54,27 @@
 .info-box li {
   margin-bottom: 8px;
   color: #595959;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .order-grouper-container {
+    padding: 16px;
+  }
+  
+  .order-grouper-card {
+    border-radius: 8px;
+  }
+  
+  .grouper-header h2 {
+    font-size: 20px;
+  }
+  
+  .partner-section {
+    padding: 12px;
+  }
+  
+  .info-box {
+    padding: 12px;
+  }
 }

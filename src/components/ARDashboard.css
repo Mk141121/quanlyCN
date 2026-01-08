@@ -1,11 +1,11 @@
 .ar-dashboard-container {
-  padding: 20px;
+  padding: 24px;
   min-height: 100vh;
-  background: #f0f2f5;
+  background: var(--bg-app, #f0f2f5);
 }
 
 .ar-dashboard-container .ant-card {
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -16,4 +16,15 @@
 
 .ar-dashboard-container .ant-statistic-content {
   font-size: 24px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ar-dashboard-container {
+    padding: 16px;
+  }
+  
+  .ar-dashboard-container .ant-statistic-content {
+    font-size: 18px;
+  }
 }

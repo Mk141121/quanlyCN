@@ -2,6 +2,7 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  padding: 20px;
 }
 
 .document-selector-card {
@@ -35,4 +36,24 @@
 
 .documents-table .ant-btn:disabled {
   opacity: 0.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .document-selector-container {
+    padding: 16px;
+  }
+  
+  .document-selector-card {
+    border-radius: 8px;
+  }
+  
+  .selector-header h2 {
+    font-size: 20px;
+  }
+  
+  .selector-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

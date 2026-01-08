@@ -3,6 +3,26 @@
    Modern minimal design inspired by dashboard UI
    ============================================ */
 
+:root {
+  --bg-primary: linear-gradient(135deg, #1a2332 0%, #243447 100%);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --bg-card: #2c3e5a;
+  --bg-input: #1a2332;
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+}
+
+.light-mode {
+  --bg-primary: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --bg-card: #ffffff;
+  --bg-input: #f1f5f9;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+}
+
 .sidebar-menu {
   padding: 20px 16px;
   height: 100%;
