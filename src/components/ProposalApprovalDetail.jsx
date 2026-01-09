@@ -20,15 +20,18 @@ import {
   CloseCircleOutlined,
   FileTextOutlined,
   DownOutlined,
-  UpOutlined
+  UpOutlined,
+  PrinterOutlined
 } from '@ant-design/icons'
 import { mockAPI } from '../utils/mockAPICongNo'
 import dayjs from 'dayjs'
+import PrintButton from './print/PrintButton'
+import { getCompanyConfig } from '../utils/printUtils'
 import './ProposalApprovalDetail.css'
 
 const { TextArea } = Input
 
-const ProposalApprovalDetail = ({ proposalId, onBack, onSuccess }) => {
+const ProposalApprovalDetail = ({ proposalId, onBack, onSuccess, viewOnly = false }) => {
   const [loading, setLoading] = useState(false)
   const [proposal, setProposal] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -175,28 +178,57 @@ const ProposalApprovalDetail = ({ proposalId, onBack, onSuccess }) => {
             </h2>
           </div>
           
-          {isPending && (
-            <Space>
-              <Button
-                danger
-                icon={<CloseCircleOutlined />}
-                size="large"
-                onClick={handleReject}
-                loading={submitting}
-              >
-                Từ chối
-              </Button>
-              <Button
-                type="primary"
-                icon={<CheckCircleOutlined />}
-                size="large"
-                onClick={handleApprove}
-                loading={submitting}
-              >
-                Duyệt {selectedSuppliers.length > 0 ? `(${selectedSuppliers.length}/${proposal?.supplierGroups?.length || 0})` : ''}
-              </Button>
-            </Space>
-          )}
+          {/* Nút In luôn hiện, nút Duyệt/Từ chối chỉ hiện khi không phải viewOnly và đang PENDING */}
+          <Space>
+            <PrintButton
+              templateId="DE_XUAT_THANH_TOAN"
+              templateName="Đề xuất Thanh toán"
+              data={{
+                proposalCode: proposal.maDeXuat || proposal.proposalCode || proposal.id,
+                createdAt: proposal.createdDate || proposal.createdAt,
+                createdBy: proposal.createdBy || 'Kế toán',
+                supplierGroups: (proposal.supplierGroups || []).map(g => ({
+                  supplierCode: g.supplierCode || '',
+                  supplierName: g.supplierName,
+                  noiDungThanhToan: g.noiDungThanhToan || `Thanh toán ${(g.orders || g.poIds || []).length} đơn hàng`,
+                  lastPaymentDate: g.lastPaymentDate || g.paymentHistory?.date || null,
+                  lastPaymentAmount: g.lastPaymentAmount || g.paymentHistory?.amount || 0,
+                  paymentAmount: g.amount || g.paymentAmount || 0,
+                  ghiChu: g.ghiChu || '',
+                  orders: (g.orders || g.poIds || []).map(o => typeof o === 'string' ? { orderCode: o } : o)
+                })),
+                totalPayment: proposal.totalAmount,
+                ghiChu: proposal.note
+              }}
+              config={getCompanyConfig()}
+              buttonText="In đề xuất"
+              buttonType="default"
+              buttonSize="large"
+            />
+            {/* Chỉ hiện nút Duyệt/Từ chối khi KHÔNG phải viewOnly và đang PENDING */}
+            {!viewOnly && isPending && (
+              <>
+                <Button
+                  danger
+                  icon={<CloseCircleOutlined />}
+                  size="large"
+                  onClick={handleReject}
+                  loading={submitting}
+                >
+                  Từ chối
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<CheckCircleOutlined />}
+                  size="large"
+                  onClick={handleApprove}
+                  loading={submitting}
+                >
+                  Duyệt {selectedSuppliers.length > 0 ? `(${selectedSuppliers.length}/${proposal?.supplierGroups?.length || 0})` : ''}
+                </Button>
+              </>
+            )}
+          </Space>
         </div>
 
         {/* Proposal Info */}
@@ -310,7 +342,7 @@ const ProposalApprovalDetail = ({ proposalId, onBack, onSuccess }) => {
               orders: group.orders || []
             }
           })}
-          rowSelection={isPending ? {
+          rowSelection={(!viewOnly && isPending) ? {
             selectedRowKeys: selectedSuppliers,
             onChange: (keys) => setSelectedSuppliers(keys),
             columnWidth: 50

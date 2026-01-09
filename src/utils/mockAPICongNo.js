@@ -6,6 +6,74 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 // Polyfill for window in Node.js environment
 const globalStore = typeof window !== 'undefined' ? window : global
 
+// ============= LOCALSTORAGE HELPERS =============
+const STORAGE_KEYS = {
+  PROPOSALS: 'erp_proposals',
+  PHIEU_THU_CHI: 'erp_phieu_thu_chi',
+  PURCHASE_ORDERS: 'erp_purchase_orders',
+  AR_DOCUMENTS: 'erp_ar_documents'
+}
+
+const saveToStorage = (key, data) => {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, JSON.stringify(data))
+    }
+  } catch (e) {
+    console.warn('Cannot save to localStorage:', e)
+  }
+}
+
+const loadFromStorage = (key) => {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const data = localStorage.getItem(key)
+      return data ? JSON.parse(data) : null
+    }
+  } catch (e) {
+    console.warn('Cannot load from localStorage:', e)
+  }
+  return null
+}
+
+// ============= INIT FROM LOCALSTORAGE =============
+// Will be called after all declarations
+let isInitialized = false
+
+const initFromStorage = () => {
+  if (isInitialized) return
+  isInitialized = true
+  
+  // Load proposals from localStorage
+  const savedProposals = loadFromStorage(STORAGE_KEYS.PROPOSALS)
+  if (savedProposals && savedProposals.length > 0) {
+    globalStore.mockProposals = savedProposals
+    console.log('✅ Loaded proposals from localStorage:', savedProposals.length)
+  } else {
+    globalStore.mockProposals = []
+  }
+  
+  // Load phieu thu chi from localStorage  
+  const savedPhieuThuChi = loadFromStorage(STORAGE_KEYS.PHIEU_THU_CHI)
+  if (savedPhieuThuChi && savedPhieuThuChi.length > 0) {
+    console.log('✅ Loaded phieu thu chi from localStorage:', savedPhieuThuChi.length)
+    // Will merge after mockPhieuThuChi is declared
+    globalStore.savedPhieuThuChi = savedPhieuThuChi
+  }
+}
+
+// Helper to get proposals (lazy init from localStorage)
+const getProposals = () => {
+  if (!globalStore.mockProposals) {
+    initFromStorage()
+  }
+  // Ensure we always return the same array reference
+  if (!globalStore.mockProposals) {
+    globalStore.mockProposals = []
+  }
+  return globalStore.mockProposals
+}
+
 // ============= CUSTOMER GROUPS (Nhóm khách hàng) =============
 export const mockCustomerGroups = [
   { id: "cg-001", name: "Tập đoàn WinCommerce", description: "Hệ thống siêu thị WinMart" },
@@ -204,6 +272,22 @@ export const mockPhieuThuChi = [
     refType: "PaymentProposal"
   }
 ]
+
+// Initialize proposals from storage first
+if (typeof window !== 'undefined') {
+  initFromStorage()
+}
+
+// Merge saved phieu thu chi after declaration
+if (typeof window !== 'undefined' && globalStore.savedPhieuThuChi) {
+  globalStore.savedPhieuThuChi.forEach(saved => {
+    const exists = mockPhieuThuChi.find(p => p.id === saved.id)
+    if (!exists) {
+      mockPhieuThuChi.push(saved)
+    }
+  })
+  console.log('✅ Merged saved phieu thu chi:', globalStore.savedPhieuThuChi.length)
+}
 
 // ============= API MOCK =============
 export const mockAPI = {
@@ -1053,9 +1137,14 @@ export const mockAPI = {
   createPaymentProposalWorkflow: async (payload) => {
     await delay(500)
     
+    // Ensure proposals array exists
+    if (!globalStore.mockProposals) {
+      globalStore.mockProposals = []
+    }
+    
     const newProposal = {
       id: `PROPOSAL-${Date.now()}`,
-      proposalCode: `DX-${String(mockPaymentProposals.length + 1).padStart(4, '0')}`,
+      proposalCode: `DX-${String(globalStore.mockProposals.length + 1).padStart(4, '0')}`,
       supplierGroups: payload.supplierGroups,
       totalAmount: payload.totalAmount,
       note: payload.note,
@@ -1076,11 +1165,11 @@ export const mockAPI = {
       })
     })
     
-    // Store in memory (would be database in real app)
-    if (!globalStore.mockProposals) {
-      globalStore.mockProposals = []
-    }
+    // Store in memory and localStorage
     globalStore.mockProposals.push(newProposal)
+    saveToStorage(STORAGE_KEYS.PROPOSALS, globalStore.mockProposals)
+    
+    console.log('✅ Created proposal:', newProposal.proposalCode, '- Total proposals:', globalStore.mockProposals.length)
     
     return newProposal
   },
@@ -1089,16 +1178,14 @@ export const mockAPI = {
   getPaymentProposalList: async (statusFilter = null) => {
     await delay(300)
     
-    if (!globalStore.mockProposals) {
-      globalStore.mockProposals = []
-    }
-    
-    let proposals = globalStore.mockProposals
+    let proposals = getProposals()
+    console.log('📋 getPaymentProposalList - Total proposals:', proposals.length, 'Filter:', statusFilter)
     
     if (statusFilter) {
       proposals = proposals.filter(p => p.status === statusFilter)
     }
     
+    console.log('📋 Filtered proposals:', proposals.length)
     return proposals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
   },
 
@@ -1106,11 +1193,8 @@ export const mockAPI = {
   getPaymentProposalDetail: async (proposalId) => {
     await delay(300)
     
-    if (!globalStore.mockProposals) {
-      globalStore.mockProposals = []
-    }
-    
-    const proposal = globalStore.mockProposals.find(p => p.id === proposalId)
+    const proposals = getProposals()
+    const proposal = proposals.find(p => p.id === proposalId)
     
     if (!proposal) {
       throw new Error('Không tìm thấy đề xuất')
@@ -1132,11 +1216,8 @@ export const mockAPI = {
   approvePaymentProposal: async (proposalId, selectedSupplierIds = []) => {
     await delay(800)
     
-    if (!globalStore.mockProposals) {
-      globalStore.mockProposals = []
-    }
-    
-    const proposal = globalStore.mockProposals.find(p => p.id === proposalId)
+    const proposals = getProposals()
+    const proposal = proposals.find(p => p.id === proposalId)
     
     if (!proposal) {
       throw new Error('Không tìm thấy đề xuất')
@@ -1217,6 +1298,10 @@ export const mockAPI = {
       createdVouchers.push(newPhieuChi)
     }
     
+    // Save to localStorage for persistence
+    saveToStorage(STORAGE_KEYS.PROPOSALS, globalStore.mockProposals)
+    saveToStorage(STORAGE_KEYS.PHIEU_THU_CHI, mockPhieuThuChi)
+    
     return {
       success: true,
       proposal,
@@ -1228,11 +1313,8 @@ export const mockAPI = {
   rejectPaymentProposal: async (proposalId, reason) => {
     await delay(500)
     
-    if (!globalStore.mockProposals) {
-      globalStore.mockProposals = []
-    }
-    
-    const proposal = globalStore.mockProposals.find(p => p.id === proposalId)
+    const proposals = getProposals()
+    const proposal = proposals.find(p => p.id === proposalId)
     
     if (!proposal) {
       throw new Error('Không tìm thấy đề xuất')
@@ -1247,6 +1329,9 @@ export const mockAPI = {
     proposal.rejectedBy = 'Giám đốc'
     proposal.rejectedAt = new Date().toISOString()
     proposal.rejectReason = reason
+    
+    // Save to localStorage for persistence
+    saveToStorage(STORAGE_KEYS.PROPOSALS, globalStore.mockProposals)
     
     return {
       success: true,

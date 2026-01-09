@@ -218,7 +218,7 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
             id: pc.id,
             code: pc.maPhieu,
             partner: pc.supplier || pc.doiTac || '',  // Tên NCC hoặc Đối tác (phiếu thủ công)
-            amount: pc.totalAmount,
+            amount: pc.totalAmount || 0,
             paidAmount: pc.paidAmount || 0,
             status: pc.status,
             itemCount: pc.poIds?.length || 0,
@@ -234,7 +234,7 @@ const DocumentSelector = ({ type = 'AP', onSelect, onBack }) => {
           id: ar.id,
           code: ar.maChungTu,
           partner: ar.customer || ar.doiTac || '',  // Tên khách hàng hoặc Đối tác (phiếu thủ công)
-          amount: ar.totalAmount,
+          amount: ar.totalAmount || 0,
           paidAmount: ar.paidAmount || 0,
           status: ar.status,
           itemCount: ar.items?.length || 0,

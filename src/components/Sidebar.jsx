@@ -167,6 +167,20 @@ const Sidebar = ({ onNavigate, darkMode, onToggleDarkMode, currentView, currentT
         </button>
       </div>
 
+      {/* Administrative Forms Section */}
+      <div className="menu-section">
+        <div className="section-label">HÀNH CHÍNH</div>
+        
+        <button 
+          className={`menu-item ${currentView === 'print-template-manager' ? 'active' : ''}`}
+          onClick={() => onNavigate('print-template-manager')}
+        >
+          <span className="menu-item-icon">🖨️</span>
+          <span className="menu-item-text">Tạo Form Hành chính</span>
+          <span className="menu-item-dots">⋮</span>
+        </button>
+      </div>
+
       {/* Bottom Section */}
       <div className="menu-bottom">
         <button className="menu-item menu-item-secondary">

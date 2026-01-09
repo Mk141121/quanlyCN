@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hướng dẫn sử dụng - ERP Quản lý Công nợ</title>
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #06b6d4;
+      --dark: #1e293b;
+      --gray: #64748b;
+      --light: #f8fafc;
+      --border: #e2e8f0;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.7;
+      color: var(--dark);
+      background: var(--light);
+    }
+    
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .header p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+    
+    .version-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      margin-top: 15px;
+    }
+    
+    /* Navigation */
+    .nav {
+      background: white;
+      padding: 15px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .nav-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .nav a {
+      color: var(--gray);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .nav a:hover {
+      background: var(--primary);
+      color: white;
+    }
+    
+    /* Main Content */
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    
+    /* Sections */
+    .section {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
+    }
+    
+    .section h2 {
+      color: var(--primary);
+      font-size: 1.75rem;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .section h3 {
+      color: var(--dark);
+      font-size: 1.25rem;
+      margin: 30px 0 15px 0;
+    }
+    
+    .section h4 {
+      color: var(--gray);
+      font-size: 1rem;
+      margin: 20px 0 10px 0;
+      font-weight: 600;
+    }
+    
+    .section p {
+      color: var(--gray);
+      margin-bottom: 15px;
+    }
+    
+    /* Lists */
+    .section ul, .section ol {
+      margin-left: 25px;
+      margin-bottom: 20px;
+    }
+    
+    .section li {
+      margin-bottom: 10px;
+      color: var(--gray);
+    }
+    
+    .section li strong {
+      color: var(--dark);
+    }
+    
+    /* Workflow Box */
+    .workflow-box {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border: 1px solid #bae6fd;
+      border-radius: 12px;
+      padding: 25px;
+      margin: 20px 0;
+    }
+    
+    .workflow-box.ar {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border-color: #bbf7d0;
+    }
+    
+    .workflow-box.ap {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-color: #fcd34d;
+    }
+    
+    .workflow-title {
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    /* Flow Steps */
+    .flow-steps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: 15px 0;
+    }
+    
+    .flow-step {
+      background: white;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .flow-arrow {
+      color: var(--primary);
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    
+    /* Status Tags */
+    .status-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 15px 0;
+    }
+    
+    .status-tag {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    .status-tag.pending { background: #fef3c7; color: #b45309; }
+    .status-tag.waiting { background: #fed7aa; color: #c2410c; }
+    .status-tag.approved { background: #bbf7d0; color: #166534; }
+    .status-tag.rejected { background: #fecaca; color: #dc2626; }
+    .status-tag.partial { background: #fbcfe8; color: #be185d; }
+    
+    /* Screenshots placeholder */
+    .screenshot {
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+      border-radius: 12px;
+      padding: 60px;
+      text-align: center;
+      color: var(--gray);
+      margin: 20px 0;
+      border: 2px dashed var(--border);
+    }
+    
+    /* Tips Box */
+    .tip-box {
+      background: #f0fdf4;
+      border-left: 4px solid var(--success);
+      padding: 15px 20px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+    }
+    
+    .tip-box.warning {
+      background: #fffbeb;
+      border-left-color: var(--warning);
+    }
+    
+    .tip-box.info {
+      background: #f0f9ff;
+      border-left-color: var(--info);
+    }
+    
+    .tip-box.danger {
+      background: #fef2f2;
+      border-left-color: var(--danger);
+    }
+    
+    .tip-title {
+      font-weight: 700;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    /* Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.95rem;
+    }
+    
+    .data-table th {
+      background: var(--primary);
+      color: white;
+      padding: 12px 15px;
+      text-align: left;
+      font-weight: 600;
+    }
+    
+    .data-table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .data-table tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    
+    .data-table tr:hover {
+      background: #e0f2fe;
+    }
+    
+    /* Code blocks */
+    code {
+      background: #f1f5f9;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'Consolas', monospace;
+      font-size: 0.9em;
+      color: var(--primary-dark);
+    }
+    
+    /* Keyboard shortcuts */
+    kbd {
+      background: linear-gradient(180deg, #fff 0%, #f1f5f9 100%);
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-family: inherit;
+      font-size: 0.85em;
+      box-shadow: 0 2px 0 #d1d5db;
+    }
+    
+    /* Icon placeholders */
+    .icon {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      text-align: center;
+      font-size: 1.2rem;
+    }
+    
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray);
+      border-top: 1px solid var(--border);
+      background: white;
+    }
+    
+    /* Feature Grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin: 25px 0;
+    }
+    
+    .feature-card {
+      background: var(--light);
+      border-radius: 12px;
+      padding: 25px;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .feature-card h4 {
+      margin: 0 0 10px 0;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .feature-card p {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+    
+    /* Numbered Steps */
+    .numbered-steps {
+      counter-reset: step;
+      list-style: none;
+      margin-left: 0;
+      padding-left: 0;
+    }
+    
+    .numbered-steps li {
+      position: relative;
+      padding-left: 50px;
+      margin-bottom: 20px;
+    }
+    
+    .numbered-steps li::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 32px;
+      height: 32px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header h1 { font-size: 1.75rem; }
+      .section { padding: 25px; }
+      .section h2 { font-size: 1.4rem; }
+      .flow-steps { flex-direction: column; }
+      .flow-arrow { transform: rotate(90deg); }
+    }
+    
+    @media print {
+      .nav { display: none; }
+      .section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <h1>📋 Hướng Dẫn Sử Dụng</h1>
+    <p>Hệ thống ERP Quản lý Công nợ - Phiếu Thu Chi</p>
+    <div class="version-badge">Version 1.0.0 | Cập nhật: 08/01/2026</div>
+  </header>
+  
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-content">
+      <a href="#tong-quan">🏠 Tổng quan</a>
+      <a href="#ar-flow">💼 Phiếu Thu (AR)</a>
+      <a href="#ap-flow">💳 Phiếu Chi (AP)</a>
+      <a href="#duyet-de-xuat">✅ Duyệt đề xuất</a>
+      <a href="#bao-cao">📊 Báo cáo</a>
+      <a href="#faq">❓ FAQ</a>
+    </div>
+  </nav>
+  
+  <div class="container">
+    
+    <!-- Section 1: Tổng quan -->
+    <section id="tong-quan" class="section">
+      <h2><span class="icon">🏠</span> Tổng Quan Hệ Thống</h2>
+      
+      <p>Hệ thống ERP Quản lý Công nợ giúp doanh nghiệp quản lý toàn bộ quy trình thu chi, theo dõi công nợ khách hàng (AR) và nhà cung cấp (AP) một cách hiệu quả.</p>
+      
+      <h3>Các chức năng chính</h3>
+      
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>💼 Quản lý AR</h4>
+          <p>Xác nhận công nợ khách hàng, tạo phiếu thu, theo dõi tiền thu từ bán hàng</p>
+        </div>
+        <div class="feature-card">
+          <h4>💳 Quản lý AP</h4>
+          <p>Xác nhận công nợ NCC, tạo đề xuất thanh toán, lập phiếu chi</p>
+        </div>
+        <div class="feature-card">
+          <h4>✅ Duyệt đề xuất</h4>
+          <p>Phê duyệt đề xuất thanh toán, đề xuất chi khác trước khi thanh toán</p>
+        </div>
+        <div class="feature-card">
+          <h4>📊 Báo cáo</h4>
+          <p>Dashboard tổng hợp, báo cáo AR, báo cáo AP theo thời gian thực</p>
+        </div>
+      </div>
+      
+      <h3>Cấu trúc Menu</h3>
+      
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Menu</th>
+            <th>Mô tả</th>
+            <th>Đối tượng sử dụng</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>📊 Dashboard Tổng hợp</strong></td>
+            <td>Xem tổng quan dòng tiền, công nợ, các chỉ số quan trọng</td>
+            <td>Tất cả người dùng</td>
+          </tr>
+          <tr>
+            <td><strong>💼 Xác nhận Công nợ (AR)</strong></td>
+            <td>Gom nhiều SO để tạo phiếu thu theo khách hàng</td>
+            <td>Kế toán AR</td>
+          </tr>
+          <tr>
+            <td><strong>💵 Lập Phiếu Thu</strong></td>
+            <td>Xác nhận thu tiền từ khách hàng</td>
+            <td>Kế toán AR, Thu ngân</td>
+          </tr>
+          <tr>
+            <td><strong>🏭 Xác nhận Công nợ (AP)</strong></td>
+            <td>Gom nhiều PO để tạo đề xuất thanh toán</td>
+            <td>Kế toán AP</td>
+          </tr>
+          <tr>
+            <td><strong>📝 Đề xuất Thanh toán</strong></td>
+            <td>Tạo đề xuất thanh toán cho NCC</td>
+            <td>Kế toán AP</td>
+          </tr>
+          <tr>
+            <td><strong>✅ Duyệt Đề xuất</strong></td>
+            <td>Phê duyệt/Từ chối các đề xuất thanh toán</td>
+            <td>Giám đốc, Kế toán trưởng</td>
+          </tr>
+          <tr>
+            <td><strong>💳 Lập Phiếu Chi</strong></td>
+            <td>Thanh toán cho NCC sau khi được duyệt</td>
+            <td>Kế toán AP, Thủ quỹ</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+    
+    <!-- Section 2: AR Flow -->
+    <section id="ar-flow" class="section">
+      <h2><span class="icon">💼</span> Quy Trình Phiếu Thu (AR)</h2>
+      
+      <div class="workflow-box ar">
+        <div class="workflow-title">🔄 Luồng xử lý AR - Không cần duyệt</div>
+        <div class="flow-steps">
+          <div class="flow-step">📦 Đơn bán (SO)</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">✓ Xác nhận Công nợ</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">📄 Phiếu Thu</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">💰 Thu tiền</div>
+        </div>
+      </div>
+      
+      <h3>Bước 1: Xác nhận Công nợ Khách hàng</h3>
+      
+      <ol class="numbered-steps">
+        <li>
+          <strong>Truy cập menu "Xác nhận Công nợ" (KHÁCH HÀNG)</strong>
+          <p>Click vào menu bên trái, phần KHÁCH HÀNG → Xác nhận Công nợ</p>
+        </li>
+        <li>
+          <strong>Chọn khoảng thời gian</strong>
+          <p>Chọn từ ngày - đến ngày để lọc các đơn bán hàng (SO) cần xác nhận công nợ</p>
+        </li>
+        <li>
+          <strong>Lọc theo nhóm khách hàng (tùy chọn)</strong>
+          <p>Có thể chọn nhóm khách hàng cụ thể: WinCommerce, Saigon Co.op, AEON...</p>
+        </li>
+        <li>
+          <strong>Chọn các đơn hàng cần xác nhận</strong>
+          <p>Tick chọn các SO cần gom. Hệ thống sẽ <strong>tự động tách riêng theo từng khách hàng</strong> - mỗi khách hàng sẽ có 1 phiếu thu riêng.</p>
+        </li>
+        <li>
+          <strong>Click "Xác nhận Công nợ"</strong>
+          <p>Hệ thống tạo AR Document cho từng khách hàng với trạng thái <code>CHỜ THU TIỀN</code></p>
+        </li>
+      </ol>
+      
+      <div class="tip-box info">
+        <div class="tip-title">💡 Lưu ý quan trọng</div>
+        <p>Khi chọn nhiều SO của nhiều khách hàng khác nhau, hệ thống sẽ <strong>tự động tách</strong> thành nhiều phiếu thu - mỗi khách hàng 1 phiếu. Đây là khác biệt chính so với quy trình AP.</p>
+      </div>
+      
+      <h3>Bước 2: Lập Phiếu Thu</h3>
+      
+      <ol class="numbered-steps">
+        <li>
+          <strong>Truy cập menu "Lập Phiếu Thu"</strong>
+          <p>Màn hình hiển thị danh sách các phiếu thu đang chờ thu tiền</p>
+        </li>
+        <li>
+          <strong>Click "Chọn" phiếu cần thu tiền</strong>
+          <p>Xem chi tiết các đơn hàng (SO) kèm theo</p>
+        </li>
+        <li>
+          <strong>Nhập thông tin thanh toán</strong>
+          <ul>
+            <li><strong>Phương thức:</strong> Tiền mặt hoặc Chuyển khoản</li>
+            <li><strong>Số tiền:</strong> Có thể thu một phần hoặc toàn bộ</li>
+            <li><strong>Bill:</strong> Nếu chuyển khoản, bắt buộc upload bill</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Click "Xác nhận Thanh toán"</strong>
+          <p>Hệ thống ghi nhận khoản thu và cập nhật trạng thái</p>
+        </li>
+      </ol>
+      
+      <h3>Các trạng thái Phiếu Thu</h3>
+      
+      <div class="status-list">
+        <span class="status-tag waiting">Chờ thu tiền</span>
+        <span class="status-tag partial">Đã thu một phần</span>
+        <span class="status-tag approved">Đã thu tiền</span>
+      </div>
+    </section>
+    
+    <!-- Section 3: AP Flow -->
+    <section id="ap-flow" class="section">
+      <h2><span class="icon">💳</span> Quy Trình Phiếu Chi (AP)</h2>
+      
+      <div class="workflow-box ap">
+        <div class="workflow-title">🔄 Luồng xử lý AP - Cần duyệt trước khi thanh toán</div>
+        <div class="flow-steps">
+          <div class="flow-step">📦 Đơn mua (PO)</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">✓ Xác nhận Công nợ</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">📝 Đề xuất TT</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">✅ Duyệt</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">💰 Thanh toán</div>
+        </div>
+      </div>
+      
+      <h3>Bước 1: Xác nhận Công nợ NCC</h3>
+      
+      <ol class="numbered-steps">
+        <li>
+          <strong>Truy cập menu "Xác nhận Công nợ" (NHÀ CUNG CẤP)</strong>
+          <p>Phần NHÀ CUNG CẤP → Xác nhận Công nợ</p>
+        </li>
+        <li>
+          <strong>Chọn khoảng thời gian và nhóm NCC</strong>
+          <p>Lọc các PO theo ngày và nhóm nhà cung cấp</p>
+        </li>
+        <li>
+          <strong>Chọn các PO cần xác nhận</strong>
+          <p>Tick chọn các đơn mua cần gom thành đề xuất thanh toán</p>
+        </li>
+        <li>
+          <strong>Click "Xác nhận Công nợ"</strong>
+          <p>Hệ thống tạo Phiếu Chi với trạng thái <code>CHỜ DUYỆT</code></p>
+        </li>
+      </ol>
+      
+      <div class="tip-box warning">
+        <div class="tip-title">⚠️ Khác biệt với AR</div>
+        <p>Phiếu Chi từ PO <strong>cần phải được duyệt</strong> trước khi thanh toán. Người dùng phải vào menu "Duyệt Đề xuất" để phê duyệt.</p>
+      </div>
+      
+      <h3>Bước 2: Tạo Đề xuất Thanh toán (Tùy chọn)</h3>
+      
+      <p>Ngoài cách xác nhận công nợ từ PO, bạn có thể tạo đề xuất thanh toán thủ công:</p>
+      
+      <ol class="numbered-steps">
+        <li>
+          <strong>Truy cập menu "Đề xuất Thanh toán"</strong>
+        </li>
+        <li>
+          <strong>Chọn nhà cung cấp và các PO</strong>
+        </li>
+        <li>
+          <strong>Nhập nội dung đề xuất</strong>
+        </li>
+        <li>
+          <strong>Gửi đề xuất</strong>
+          <p>Đề xuất sẽ xuất hiện trong màn hình "Duyệt Đề xuất"</p>
+        </li>
+      </ol>
+      
+      <h3>Bước 3: Lập Phiếu Chi</h3>
+      
+      <ol class="numbered-steps">
+        <li>
+          <strong>Truy cập menu "Lập Phiếu Chi"</strong>
+          <p>Chỉ hiển thị các phiếu đã được duyệt (CHỜ THANH TOÁN)</p>
+        </li>
+        <li>
+          <strong>Click "Chọn" phiếu cần thanh toán</strong>
+        </li>
+        <li>
+          <strong>Nhập thông tin thanh toán</strong>
+          <ul>
+            <li>Phương thức: Tiền mặt / Chuyển khoản</li>
+            <li>Số tiền thanh toán</li>
+            <li>Upload bill (nếu chuyển khoản)</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Click "Xác nhận Thanh toán"</strong>
+        </li>
+      </ol>
+      
+      <h3>Tạo Đề xuất Chi khác (Phiếu Chi thủ công)</h3>
+      
+      <p>Để tạo phiếu chi không liên quan đến PO:</p>
+      
+      <ol class="numbered-steps">
+        <li>
+          <strong>Trong màn hình "Lập Phiếu Chi", click "Tạo phiếu mới"</strong>
+        </li>
+        <li>
+          <strong>Nhập thông tin:</strong>
+          <ul>
+            <li>Nội dung chi</li>
+            <li>Đối tác (tên người/công ty nhận tiền)</li>
+            <li>Số tiền</li>
+            <li>Phương thức thanh toán</li>
+            <li>Ghi chú (tùy chọn)</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Click "Tạo Đề xuất Chi"</strong>
+          <p>Phiếu sẽ có trạng thái <code>CHỜ DUYỆT</code> và xuất hiện trong tab "Đề xuất Chi khác" của màn hình Duyệt</p>
+        </li>
+      </ol>
+      
+      <h3>Các trạng thái Phiếu Chi</h3>
+      
+      <div class="status-list">
+        <span class="status-tag pending">Chờ duyệt</span>
+        <span class="status-tag waiting">Chờ thanh toán</span>
+        <span class="status-tag partial">Đã thanh toán một phần</span>
+        <span class="status-tag approved">Đã thanh toán</span>
+        <span class="status-tag rejected">Không duyệt</span>
+      </div>
+    </section>
+    
+    <!-- Section 4: Duyệt đề xuất -->
+    <section id="duyet-de-xuat" class="section">
+      <h2><span class="icon">✅</span> Duyệt Đề Xuất</h2>
+      
+      <p>Màn hình duyệt đề xuất dành cho Giám đốc hoặc Kế toán trưởng để phê duyệt các khoản chi trước khi thanh toán.</p>
+      
+      <h3>Truy cập</h3>
+      <p>Menu NHÀ CUNG CẤP → <strong>Duyệt Đề xuất</strong></p>
+      <p>Badge thông báo số lượng đề xuất đang chờ duyệt sẽ hiển thị trên menu.</p>
+      
+      <h3>Hai loại đề xuất</h3>
+      
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Tab</th>
+            <th>Mô tả</th>
+            <th>Nguồn gốc</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Đề xuất Thanh toán</strong></td>
+            <td>Thanh toán cho NCC từ các PO</td>
+            <td>Từ màn hình "Xác nhận Công nợ" hoặc "Đề xuất Thanh toán"</td>
+          </tr>
+          <tr>
+            <td><strong>Đề xuất Chi khác</strong></td>
+            <td>Các khoản chi khác không liên quan PO</td>
+            <td>Từ nút "Tạo phiếu mới" trong màn hình "Lập Phiếu Chi"</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <h3>Thao tác duyệt</h3>
+      
+      <ol class="numbered-steps">
+        <li>
+          <strong>Xem danh sách đề xuất</strong>
+          <p>Các đề xuất hiển thị theo thứ tự thời gian, mới nhất ở trên</p>
+        </li>
+        <li>
+          <strong>Kiểm tra chi tiết</strong>
+          <p>Xem nội dung, đối tác, số tiền, danh sách PO kèm theo (nếu có)</p>
+        </li>
+        <li>
+          <strong>Phê duyệt</strong>
+          <p>Click nút <strong style="color: green;">Duyệt</strong> → Xác nhận → Đề xuất chuyển sang trạng thái <code>CHỜ THANH TOÁN</code></p>
+        </li>
+        <li>
+          <strong>Hoặc Từ chối</strong>
+          <p>Click nút <strong style="color: red;">Từ chối</strong> → Nhập lý do → Đề xuất chuyển sang trạng thái <code>KHÔNG DUYỆT</code></p>
+        </li>
+      </ol>
+      
+      <div class="tip-box danger">
+        <div class="tip-title">🚫 Lưu ý về từ chối</div>
+        <p>Khi từ chối đề xuất, <strong>bắt buộc phải nhập lý do</strong>. Đề xuất bị từ chối sẽ không thể thanh toán và sẽ hiển thị trong phần "Không duyệt".</p>
+      </div>
+    </section>
+    
+    <!-- Section 5: Báo cáo -->
+    <section id="bao-cao" class="section">
+      <h2><span class="icon">📊</span> Báo Cáo & Dashboard</h2>
+      
+      <h3>Dashboard Tổng hợp</h3>
+      <p>Xem tổng quan tình hình tài chính:</p>
+      <ul>
+        <li><strong>Dòng tiền ròng:</strong> Thu - Chi trong kỳ</li>
+        <li><strong>Công nợ phải thu:</strong> Tổng tiền khách hàng còn nợ</li>
+        <li><strong>Công nợ phải trả:</strong> Tổng tiền còn nợ NCC</li>
+        <li><strong>Biểu đồ:</strong> Xu hướng thu chi theo thời gian</li>
+      </ul>
+      
+      <h3>Báo cáo AR</h3>
+      <p>Chi tiết công nợ khách hàng:</p>
+      <ul>
+        <li>Danh sách khách hàng và số tiền còn nợ</li>
+        <li>Tuổi nợ (aging report)</li>
+        <li>Lịch sử thanh toán</li>
+      </ul>
+      
+      <h3>Báo cáo AP</h3>
+      <p>Chi tiết công nợ nhà cung cấp:</p>
+      <ul>
+        <li>Danh sách NCC và số tiền còn phải trả</li>
+        <li>Các đề xuất đang chờ duyệt</li>
+        <li>Lịch sử thanh toán</li>
+      </ul>
+    </section>
+    
+    <!-- Section 6: FAQ -->
+    <section id="faq" class="section">
+      <h2><span class="icon">❓</span> Câu Hỏi Thường Gặp</h2>
+      
+      <h3>Q: Tại sao phiếu chi cần duyệt mà phiếu thu thì không?</h3>
+      <p><strong>A:</strong> Theo quy trình kế toán tiêu chuẩn, việc chi tiền ra cần có sự phê duyệt của cấp trên để đảm bảo tính hợp lệ và kiểm soát ngân sách. Trong khi đó, việc thu tiền vào không cần duyệt vì đây là ghi nhận doanh thu.</p>
+      
+      <h3>Q: Có thể thanh toán một phần không?</h3>
+      <p><strong>A:</strong> Có. Hệ thống hỗ trợ thanh toán một phần. Số tiền còn lại sẽ được theo dõi và phiếu sẽ có trạng thái "Đã thanh toán một phần" (màu hồng).</p>
+      
+      <h3>Q: Tại sao bắt buộc phải upload Bill khi chuyển khoản?</h3>
+      <p><strong>A:</strong> Đây là yêu cầu của quy trình kế toán để có bằng chứng giao dịch. Bill ngân hàng là chứng từ quan trọng cho việc đối chiếu và kiểm toán.</p>
+      
+      <h3>Q: Làm sao để xem phiếu đã thanh toán?</h3>
+      <p><strong>A:</strong> Trong màn hình "Lập Phiếu Thu" hoặc "Lập Phiếu Chi", click vào bộ lọc trạng thái và chọn "Đã thanh toán" hoặc "Đã thu tiền". Bạn có thể click nút "Xem" để xem chi tiết phiếu.</p>
+      
+      <h3>Q: Có thể hủy phiếu đã tạo không?</h3>
+      <p><strong>A:</strong> Phiếu đang ở trạng thái "Chờ duyệt" có thể bị từ chối. Phiếu đã thanh toán không thể hủy, chỉ có thể tạo phiếu điều chỉnh (reversal).</p>
+      
+      <h3>Q: Badge thông báo trên menu nghĩa là gì?</h3>
+      <p><strong>A:</strong> Các badge màu đỏ/cam trên menu hiển thị số lượng item cần xử lý:</p>
+      <ul>
+        <li><strong>Xác nhận Công nợ:</strong> Số PO/SO chờ xác nhận</li>
+        <li><strong>Duyệt Đề xuất:</strong> Số đề xuất đang chờ duyệt</li>
+      </ul>
+      
+      <h3>Q: Hệ thống có tự động refresh không?</h3>
+      <p><strong>A:</strong> Có. Số lượng thông báo trên menu sẽ tự động cập nhật mỗi 30 giây. Để refresh thủ công, bạn có thể reload trang hoặc chuyển qua menu khác rồi quay lại.</p>
+    </section>
+    
+    <!-- Keyboard Shortcuts -->
+    <section class="section">
+      <h2><span class="icon">⌨️</span> Phím Tắt</h2>
+      
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Phím tắt</th>
+            <th>Chức năng</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><kbd>Enter</kbd></td>
+            <td>Xác nhận trong các hộp thoại</td>
+          </tr>
+          <tr>
+            <td><kbd>Esc</kbd></td>
+            <td>Đóng hộp thoại / Hủy thao tác</td>
+          </tr>
+          <tr>
+            <td><kbd>Tab</kbd></td>
+            <td>Di chuyển giữa các trường nhập liệu</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+    
+    <!-- Support -->
+    <section class="section">
+      <h2><span class="icon">📞</span> Hỗ Trợ</h2>
+      
+      <p>Nếu gặp vấn đề trong quá trình sử dụng, vui lòng liên hệ:</p>
+      
+      <ul>
+        <li><strong>Email:</strong> support@company.com</li>
+        <li><strong>Hotline:</strong> 1900-xxxx</li>
+        <li><strong>Giờ làm việc:</strong> 8:00 - 17:30 (Thứ 2 - Thứ 6)</li>
+      </ul>
+      
+      <div class="tip-box">
+        <div class="tip-title">💡 Mẹo</div>
+        <p>Khi báo lỗi, vui lòng cung cấp: Mã lỗi (nếu có), thao tác đang thực hiện, ảnh chụp màn hình để được hỗ trợ nhanh nhất.</p>
+      </div>
+    </section>
+    
+  </div>
+  
+  <!-- Footer -->
+  <footer class="footer">
+    <p><strong>ERP Quản lý Công nợ - Phiếu Thu Chi</strong></p>
+    <p>© 2026 - Tài liệu hướng dẫn nội bộ</p>
+    <p style="margin-top: 10px; font-size: 0.875rem;">Phiên bản tài liệu: 1.0.0 | Cập nhật: 08/01/2026</p>
+  </footer>
+  
+</body>
+</html>

@@ -24,10 +24,13 @@ import {
   UploadOutlined,
   DollarOutlined,
   FileTextOutlined,
-  LockOutlined
+  LockOutlined,
+  PrinterOutlined
 } from '@ant-design/icons'
 import { mockAPI, mockPurchaseOrders } from '../utils/mockAPICongNo'
 import dayjs from 'dayjs'
+import PrintButton from './print/PrintButton'
+import { getCompanyConfig } from '../utils/printUtils'
 import './PhieuThuChiForm.css'
 
 // Màu sắc theo SPEC
@@ -301,7 +304,10 @@ const PhieuThuChiForm = ({ refId, refType, loaiPhieuProp, isViewOnly = false, is
         ngayLap: new Date().toISOString().split('T')[0],
         noiDung: noiDung.trim(),
         doiTac: doiTac.trim(),
+        supplier: loaiPhieu === 'CHI' ? doiTac.trim() : undefined,
+        customer: loaiPhieu === 'THU' ? doiTac.trim() : undefined,
         ghiChu: ghiChu.trim(),
+        note: noiDung.trim(),
         totalAmount: soTienThanhToan,
         paidAmount: 0,  // Chưa thanh toán - phải chờ duyệt
         soTien: soTienThanhToan,
@@ -376,17 +382,19 @@ const PhieuThuChiForm = ({ refId, refType, loaiPhieuProp, isViewOnly = false, is
                 />
               </Descriptions.Item>
               <Descriptions.Item label="Số tiền">
-                <InputNumber
-                  style={{ width: '100%' }}
-                  min={0}
-                  step={100000}
-                  value={soTienThanhToan}
-                  onChange={(value) => setSoTienThanhToan(value || 0)}
-                  formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={value => value.replace(/\$\s?|(,*)/g, '')}
-                  addonAfter="VND"
-                  size="large"
-                />
+                <Space.Compact style={{ width: '100%' }}>
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    min={0}
+                    step={100000}
+                    value={soTienThanhToan}
+                    onChange={(value) => setSoTienThanhToan(value || 0)}
+                    formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={value => value.replace(/\$\s?|(,*)/g, '')}
+                    size="large"
+                  />
+                  <Button disabled style={{ pointerEvents: 'none' }}>VND</Button>
+                </Space.Compact>
               </Descriptions.Item>
               <Descriptions.Item label="Phương thức">
                 <Radio.Group
@@ -429,23 +437,44 @@ const PhieuThuChiForm = ({ refId, refType, loaiPhieuProp, isViewOnly = false, is
 
             {/* Button Submit */}
             <div style={{ marginTop: 24, textAlign: 'center' }}>
-              <Button
-                type="primary"
-                size="large"
-                icon={<CheckCircleOutlined />}
-                onClick={handleCreateNew}
-                loading={submitting}
-                style={{ 
-                  background: '#52c41a',
-                  borderColor: '#52c41a',
-                  height: 50,
-                  fontSize: 16,
-                  fontWeight: 600,
-                  minWidth: 300
-                }}
-              >
-                ✅ XÁC NHẬN TẠO {loaiPhieu === 'CHI' ? 'PHIẾU CHI' : 'PHIẾU THU'} ({soTienThanhToan.toLocaleString()} VND)
-              </Button>
+              <Space size="middle">
+                <PrintButton
+                  templateId={loaiPhieu === 'CHI' ? 'PHIEU_CHI' : 'PHIEU_THU'}
+                  templateName={loaiPhieu === 'CHI' ? 'Phiếu Chi' : 'Phiếu Thu'}
+                  data={{
+                    soPhieu: `${loaiPhieu === 'CHI' ? 'PC' : 'PT'}-M-${Date.now().toString().slice(-6)}`,
+                    ngayLap: new Date().toISOString().split('T')[0],
+                    nguoiNhan: doiTac || '',
+                    nguoiNop: doiTac || '',
+                    lyDo: noiDung || '',
+                    soTien: soTienThanhToan || 0,
+                    phuongThuc: phuongThuc,
+                    ghiChu: ghiChu || ''
+                  }}
+                  config={getCompanyConfig()}
+                  buttonText="🖨️ In phiếu"
+                  buttonType="default"
+                  buttonSize="large"
+                  style={{ height: 50, fontSize: 16 }}
+                />
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<CheckCircleOutlined />}
+                  onClick={handleCreateNew}
+                  loading={submitting}
+                  style={{ 
+                    background: '#52c41a',
+                    borderColor: '#52c41a',
+                    height: 50,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    minWidth: 300
+                  }}
+                >
+                  ✅ XÁC NHẬN TẠO {loaiPhieu === 'CHI' ? 'PHIẾU CHI' : 'PHIẾU THU'} ({soTienThanhToan.toLocaleString()} VND)
+                </Button>
+              </Space>
             </div>
           </Card>
         </div>
@@ -460,6 +489,11 @@ const PhieuThuChiForm = ({ refId, refType, loaiPhieuProp, isViewOnly = false, is
   if (!documentData) {
     return <Card>Không tìm thấy dữ liệu</Card>
   }
+
+  // Debug log documentData
+  console.log('=== documentData ===', documentData)
+  console.log('documentData.supplier:', documentData.supplier)
+  console.log('documentData.items:', documentData.items)
 
   const isLocked = isViewOnly || documentData.status === 'DA_THANH_TOAN' || documentData.status === 'DA_THU_TIEN'
 
@@ -669,26 +703,47 @@ const PhieuThuChiForm = ({ refId, refType, loaiPhieuProp, isViewOnly = false, is
               </Col>
             </Row>
 
-            {/* Nút xác nhận */}
+            {/* Nút xác nhận và in */}
             <div className="action-section">
-              <Button
-                type="primary"
-                size="large"
-                icon={<CheckCircleOutlined />}
-                onClick={handleConfirm}
-                loading={submitting}
-                disabled={isLocked}
-                style={{ 
-                  background: '#52c41a',
-                  borderColor: '#52c41a',
-                  height: 50,
-                  fontSize: 16,
-                  fontWeight: 600
-                }}
-                block
-              >
-                ✅ XÁC NHẬN THANH TOÁN {soTienThanhToan > 0 && `(${soTienThanhToan.toLocaleString()} VND)`}
-              </Button>
+              <Space size="middle" style={{ width: '100%', justifyContent: 'center' }}>
+                <PrintButton
+                  templateId={loaiPhieu === 'CHI' ? 'PHIEU_CHI' : 'PHIEU_THU'}
+                  templateName={loaiPhieu === 'CHI' ? 'Phiếu Chi' : 'Phiếu Thu'}
+                  data={{
+                    soPhieu: documentData?.maChungTu || documentData?.maPhieu || documentData?.maDeXuat || '',
+                    ngayLap: documentData?.ngayLap || new Date().toISOString().split('T')[0],
+                    nguoiNhan: documentData?.supplier || documentData?.doiTac || documentData?.items?.[0]?.supplier || '',
+                    nguoiNop: documentData?.customer || documentData?.doiTac || documentData?.items?.[0]?.customer || '',
+                    diaChi: documentData?.diaChiNCC || documentData?.diaChiKH || documentData?.address || '',
+                    lyDo: documentData?.noiDung || documentData?.note || 'Thanh toán công nợ',
+                    soTien: soTienThanhToan || documentData?.totalAmount || 0,
+                    phuongThuc: phuongThuc
+                  }}
+                  config={getCompanyConfig()}
+                  buttonText="🖨️ In phiếu"
+                  buttonType="default"
+                  buttonSize="large"
+                  style={{ height: 50, fontSize: 16 }}
+                />
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<CheckCircleOutlined />}
+                  onClick={handleConfirm}
+                  loading={submitting}
+                  disabled={isLocked}
+                  style={{ 
+                    background: '#52c41a',
+                    borderColor: '#52c41a',
+                    height: 50,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    minWidth: 280
+                  }}
+                >
+                  ✅ XÁC NHẬN THANH TOÁN {soTienThanhToan > 0 && `(${soTienThanhToan.toLocaleString()} VND)`}
+                </Button>
+              </Space>
             </div>
           </div>
         )}
@@ -696,9 +751,28 @@ const PhieuThuChiForm = ({ refId, refType, loaiPhieuProp, isViewOnly = false, is
         {/* Locked message */}
         {isLocked && (
           <div style={{ textAlign: 'center', padding: 24 }}>
-            <Tag color="green" style={{ fontSize: 18, padding: '8px 16px' }}>
-              ✅ Đã thanh toán - Chứng từ đã bị khóa
-            </Tag>
+            <Space>
+              <Tag color="green" style={{ fontSize: 18, padding: '8px 16px' }}>
+                ✅ Đã thanh toán - Chứng từ đã bị khóa
+              </Tag>
+                <PrintButton
+                templateId={loaiPhieu === 'CHI' ? 'PHIEU_CHI' : 'PHIEU_THU'}
+                templateName={loaiPhieu === 'CHI' ? 'Phiếu Chi' : 'Phiếu Thu'}
+                data={{
+                  soPhieu: documentData?.maChungTu || documentData?.maPhieu || documentData?.maDeXuat || '',
+                  ngayLap: documentData?.ngayLap || new Date().toISOString().split('T')[0],
+                  nguoiNhan: documentData?.supplier || documentData?.doiTac || documentData?.items?.[0]?.supplier || '',
+                  nguoiNop: documentData?.customer || documentData?.doiTac || documentData?.items?.[0]?.customer || '',
+                  lyDo: documentData?.noiDung || documentData?.note || 'Thanh toán công nợ',
+                  soTien: soTienThanhToan || documentData?.totalAmount || 0,
+                  phuongThuc: phuongThuc
+                }}
+                config={getCompanyConfig()}
+                buttonText="In phiếu"
+                buttonType="primary"
+                buttonSize="large"
+              />
+            </Space>
           </div>
         )}
       </Card>

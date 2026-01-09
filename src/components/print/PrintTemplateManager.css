@@ -1,0 +1,96 @@
+.print-template-manager {
+  padding: 0;
+}
+
+.template-intro {
+  background: linear-gradient(135deg, #e6f7ff 0%, #f0f5ff 100%);
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #1890ff;
+}
+
+.template-intro p {
+  margin: 0;
+  color: #333;
+  font-size: 14px;
+}
+
+/* Field row in form */
+.field-row {
+  background: #fafafa;
+  padding: 8px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.field-row:hover {
+  background: #f5f5f5;
+  border-color: #d9d9d9;
+}
+
+.field-row .ant-form-item {
+  margin-bottom: 0;
+}
+
+/* Table styles */
+.print-template-manager .ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+.print-template-manager .ant-table-tbody > tr:hover > td {
+  background: #e6f7ff;
+}
+
+/* Action buttons */
+.print-template-manager .ant-btn-primary {
+  background: #1890ff;
+}
+
+.print-template-manager .ant-space-item .ant-btn {
+  min-width: 32px;
+}
+
+/* Modal styles */
+.ant-modal-body .ant-divider {
+  margin: 16px 0;
+}
+
+.ant-modal-body .ant-divider-inner-text {
+  font-weight: 600;
+  color: #1890ff;
+}
+
+/* Card header */
+.print-template-manager .ant-card-head-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.print-template-manager .ant-card-head-title .anticon {
+  margin-right: 8px;
+  color: #1890ff;
+}
+
+/* Empty state */
+.print-template-manager .ant-empty {
+  padding: 40px 0;
+}
+
+/* Tag styles */
+.print-template-manager .ant-tag {
+  border-radius: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .field-row {
+    padding: 12px 8px;
+  }
+  
+  .print-template-manager .ant-table {
+    overflow-x: auto;
+  }
+}

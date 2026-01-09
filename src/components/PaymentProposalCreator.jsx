@@ -13,24 +13,31 @@ import {
   Divider,
   Space,
   Modal,
-  Tooltip
+  Tooltip,
+  Tabs
 } from 'antd'
 import {
   FileAddOutlined,
   ArrowLeftOutlined,
   SearchOutlined,
   FilterOutlined,
-  SendOutlined
+  SendOutlined,
+  PrinterOutlined,
+  EyeOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined
 } from '@ant-design/icons'
 import { mockAPI } from '../utils/mockAPICongNo'
 import dayjs from 'dayjs'
+import PrintButton from './print/PrintButton'
+import { getCompanyConfig } from '../utils/printUtils'
 import './PaymentProposalCreator.css'
 
 const { Option } = Select
 const { RangePicker } = DatePicker
 const { TextArea } = Input
 
-const PaymentProposalCreator = ({ onBack, onSuccess }) => {
+const PaymentProposalCreator = ({ onBack, onSuccess, onViewProposal }) => {
   const [loading, setLoading] = useState(false)
   const [suppliers, setSuppliers] = useState([])
   const [groups, setGroups] = useState([])
@@ -45,6 +52,12 @@ const PaymentProposalCreator = ({ onBack, onSuccess }) => {
   const [proposalNote, setProposalNote] = useState('')
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [supplierDetails, setSupplierDetails] = useState([])
+  
+  // New states for tabs
+  const [activeTab, setActiveTab] = useState('pending')
+  const [createdProposals, setCreatedProposals] = useState([])
+  const [proposalSearchText, setProposalSearchText] = useState('')
+  const [proposalDateRange, setProposalDateRange] = useState(null)
 
   // Helper function for text search filter
   const getColumnSearchProps = (dataIndex, placeholder) => ({
@@ -82,11 +95,30 @@ const PaymentProposalCreator = ({ onBack, onSuccess }) => {
     loadSuppliers()
     loadGroups()
     loadAvailableOrders()
+    loadCreatedProposals()
   }, [])
 
   useEffect(() => {
     loadAvailableOrders()
   }, [selectedGroup, selectedSupplier, dateRange])
+
+  // Load created proposals when tab changes or filter changes
+  useEffect(() => {
+    if (activeTab === 'created') {
+      loadCreatedProposals()
+    }
+  }, [activeTab])
+
+  const loadCreatedProposals = async () => {
+    try {
+      // Load all proposals (not filtered by status, we show PENDING ones here as "đã đề xuất, chờ duyệt")
+      const data = await mockAPI.getPaymentProposalList()
+      setCreatedProposals(data || [])
+    } catch (error) {
+      console.error('Error loading proposals:', error)
+      setCreatedProposals([])
+    }
+  }
 
   const loadSuppliers = async () => {
     try {
@@ -116,10 +148,6 @@ const PaymentProposalCreator = ({ onBack, onSuccess }) => {
       
       // Sử dụng API riêng cho Payment Proposal - chỉ lấy PO đã đối chiếu
       const data = await mockAPI.getAvailablePurchaseOrdersForProposal(selectedSupplier?.id, fromDate, toDate, selectedGroup)
-      
-      if (!data || data.length === 0) {
-        message.info('Không tìm thấy PO nào đã đối chiếu và chưa được đề xuất thanh toán')
-      }
       
       setAvailableOrders(data || [])
       // Merge với allOrders để giữ lại tất cả đơn đã load
@@ -197,6 +225,139 @@ const PaymentProposalCreator = ({ onBack, onSuccess }) => {
       )
     }
   ]
+
+  // Columns for created proposals table
+  const proposalColumns = [
+    {
+      title: 'Mã đề xuất',
+      dataIndex: 'proposalCode',
+      key: 'proposalCode',
+      width: 140,
+      render: (text) => (
+        <Tag color="blue" style={{ fontSize: 14 }}>
+          {text}
+        </Tag>
+      ),
+      ...getColumnSearchProps('proposalCode', 'mã đề xuất')
+    },
+    {
+      title: 'Ngày tạo',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      width: 160,
+      render: (date) => dayjs(date).format('DD/MM/YYYY HH:mm'),
+      sorter: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
+      defaultSortOrder: 'descend'
+    },
+    {
+      title: 'Người tạo',
+      dataIndex: 'createdBy',
+      key: 'createdBy',
+      width: 120,
+      ...getColumnSearchProps('createdBy', 'người tạo')
+    },
+    {
+      title: 'Số NCC',
+      dataIndex: 'supplierCount',
+      key: 'supplierCount',
+      width: 100,
+      align: 'center',
+      render: (count) => <Tag color="cyan">{count} NCC</Tag>,
+      sorter: (a, b) => (a.supplierCount || 0) - (b.supplierCount || 0)
+    },
+    {
+      title: 'Số đơn hàng',
+      dataIndex: 'orderCount',
+      key: 'orderCount',
+      width: 120,
+      align: 'center',
+      render: (count) => <Tag color="purple">{count} đơn</Tag>,
+      sorter: (a, b) => (a.orderCount || 0) - (b.orderCount || 0)
+    },
+    {
+      title: 'Tổng tiền',
+      dataIndex: 'totalAmount',
+      key: 'totalAmount',
+      width: 160,
+      align: 'right',
+      render: (amount) => (
+        <strong style={{ color: '#52c41a', fontSize: 15 }}>
+          {(amount || 0).toLocaleString()}
+        </strong>
+      ),
+      sorter: (a, b) => (a.totalAmount || 0) - (b.totalAmount || 0)
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+      width: 130,
+      render: (status) => {
+        const statusConfig = {
+          PENDING: { color: 'orange', text: 'Chờ duyệt', icon: <ClockCircleOutlined /> },
+          APPROVED: { color: 'green', text: 'Đã duyệt', icon: <CheckCircleOutlined /> },
+          PARTIAL_APPROVED: { color: 'cyan', text: 'Duyệt 1 phần', icon: <CheckCircleOutlined /> },
+          REJECTED: { color: 'red', text: 'Từ chối', icon: null }
+        }
+        const config = statusConfig[status] || { color: 'default', text: status }
+        return (
+          <Tag color={config.color} icon={config.icon}>
+            {config.text}
+          </Tag>
+        )
+      },
+      filters: [
+        { text: 'Chờ duyệt', value: 'PENDING' },
+        { text: 'Đã duyệt', value: 'APPROVED' },
+        { text: 'Duyệt 1 phần', value: 'PARTIAL_APPROVED' },
+        { text: 'Từ chối', value: 'REJECTED' }
+      ],
+      onFilter: (value, record) => record.status === value
+    },
+    {
+      title: 'Thao tác',
+      key: 'action',
+      width: 100,
+      fixed: 'right',
+      render: (_, record) => (
+        <Button
+          type="primary"
+          size="small"
+          icon={<EyeOutlined />}
+          onClick={() => onViewProposal && onViewProposal(record.id)}
+        >
+          Xem
+        </Button>
+      )
+    }
+  ]
+
+  // Filter proposals by search and date
+  const filteredProposals = createdProposals.filter(p => {
+    // Search filter
+    if (proposalSearchText) {
+      const search = proposalSearchText.toLowerCase()
+      const matchCode = p.proposalCode?.toLowerCase().includes(search)
+      const matchCreatedBy = p.createdBy?.toLowerCase().includes(search)
+      const matchSupplier = p.supplierGroups?.some(g => 
+        g.supplierName?.toLowerCase().includes(search)
+      )
+      if (!matchCode && !matchCreatedBy && !matchSupplier) {
+        return false
+      }
+    }
+    
+    // Date range filter
+    if (proposalDateRange && proposalDateRange[0] && proposalDateRange[1]) {
+      const createdDate = dayjs(p.createdAt)
+      if (createdDate.isBefore(proposalDateRange[0], 'day') || 
+          createdDate.isAfter(proposalDateRange[1], 'day')) {
+        return false
+      }
+    }
+    
+    return true
+  })
 
   const rowSelection = {
     selectedRowKeys: selectedOrderIds,
@@ -305,6 +466,8 @@ const PaymentProposalCreator = ({ onBack, onSuccess }) => {
         setProposalNote('')
         setSupplierDetails([])
         loadAvailableOrders()
+        loadCreatedProposals() // Refresh list
+        setActiveTab('created') // Switch to created tab
       }
     } catch (error) {
       message.error('Lỗi: ' + error.message)
@@ -314,6 +477,280 @@ const PaymentProposalCreator = ({ onBack, onSuccess }) => {
   }
 
   const supplierSummary = groupedBySupplier()
+
+  // Tab items
+  const tabItems = [
+    {
+      key: 'pending',
+      label: (
+        <span>
+          <ClockCircleOutlined /> Chờ đề xuất
+          <Tag color="blue" style={{ marginLeft: 8 }}>{availableOrders.length}</Tag>
+        </span>
+      ),
+      children: (
+        <>
+          {/* Filters */}
+          <div className="partner-section" style={{ background: '#f5f5f5', padding: 16, borderRadius: 8, marginBottom: 24 }}>
+            <Row gutter={16}>
+              <Col span={8}>
+                <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
+                  Khoảng ngày <span style={{ color: 'red' }}>*</span>
+                </label>
+                <RangePicker
+                  value={dateRange}
+                  onChange={setDateRange}
+                  format="DD/MM/YYYY"
+                  style={{ width: '100%' }}
+                  size="large"
+                />
+              </Col>
+
+              <Col span={8}>
+                <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
+                  Nhóm nhà cung cấp
+                </label>
+                <Select
+                  allowClear
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  style={{ width: '100%' }}
+                  placeholder="Chọn nhóm nhà cung cấp"
+                  onChange={(value) => {
+                    setSelectedGroup(value)
+                    setSelectedSupplier(null)
+                  }}
+                  value={selectedGroup}
+                  size="large"
+                >
+                  {(groups || []).map(g => (
+                    <Option key={g.id} value={g.id}>
+                      {g.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Col>
+
+              <Col span={8}>
+                <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
+                  Nhà cung cấp cụ thể
+                </label>
+                <Select
+                  allowClear
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  style={{ width: '100%' }}
+                  placeholder="Chọn nhà cung cấp"
+                  onChange={(value) => {
+                    const supplier = value ? suppliers.find(s => s.id === value) : null
+                    setSelectedSupplier(supplier)
+                  }}
+                  value={selectedSupplier?.id}
+                  size="large"
+                >
+                  {(suppliers || [])
+                    .filter(s => !selectedGroup || s.groupId === selectedGroup)
+                    .map(s => (
+                      <Option key={s.id} value={s.id}>
+                        {s.name} {s.groupName && <Tag color="blue" style={{ marginLeft: 4 }}>{s.groupName}</Tag>}
+                      </Option>
+                    ))}
+                </Select>
+              </Col>
+            </Row>
+
+            <div style={{ marginTop: 16 }}>
+              <Space>
+                <Tag color="blue" icon={<FilterOutlined />}>
+                  {(availableOrders || []).length} đơn hàng tìm thấy
+                </Tag>
+                {selectedGroup && (
+                  <Tag color="purple">
+                    Nhóm: {groups.find(g => g.id === selectedGroup)?.name}
+                  </Tag>
+                )}
+                {selectedSupplier && (
+                  <Tag color="cyan">
+                    {selectedSupplier.name}
+                  </Tag>
+                )}
+                {dateRange && dateRange[0] && dateRange[1] && (
+                  <Tag color="orange">
+                    {dateRange[0].format('DD/MM/YYYY')} - {dateRange[1].format('DD/MM/YYYY')}
+                  </Tag>
+                )}
+              </Space>
+            </div>
+          </div>
+
+          {/* Summary of selected by supplier */}
+          {supplierSummary.length > 0 && (
+            <div style={{ background: '#e6f7ff', padding: 16, borderRadius: 8, marginBottom: 24 }}>
+              <h3 style={{ marginTop: 0 }}>📋 Tóm tắt đề xuất ({supplierSummary.length} NCC)</h3>
+              <Row gutter={[16, 16]}>
+                {supplierSummary.map(group => (
+                  <Col key={group.supplierId} span={8}>
+                    <Card size="small" style={{ background: 'white' }}>
+                      <div style={{ fontWeight: 600, marginBottom: 8 }}>{group.supplierName}</div>
+                      <div style={{ color: '#666' }}>{group.orders.length} đơn hàng</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: '#1890ff', marginTop: 8 }}>
+                        {group.total.toLocaleString()} VND
+                      </div>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+              <Divider />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <strong style={{ fontSize: 16 }}>
+                    Tổng cộng: {selectedOrderIds.length} đơn - {totalSelected.toLocaleString()} VND
+                  </strong>
+                </div>
+                <Button
+                  type="primary"
+                  icon={<SendOutlined />}
+                  size="large"
+                  onClick={handleCreateProposal}
+                  loading={submitting}
+                >
+                  Tạo Đề xuất
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Orders table */}
+          {(availableOrders || []).length > 0 && (
+            <>
+              <div style={{ margin: '24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Tag color="blue" style={{ fontSize: 14, padding: '4px 12px' }}>
+                  Danh sách PO - Sẵn sàng tạo đề xuất
+                </Tag>
+                <Input
+                  placeholder="Tìm nhà cung cấp..."
+                  prefix={<SearchOutlined />}
+                  allowClear
+                  style={{ width: 300 }}
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  size="large"
+                />
+              </div>
+
+              <Table
+                rowSelection={rowSelection}
+                columns={columns}
+                dataSource={availableOrders.filter(order => {
+                  if (!searchText) return true
+                  const supplierName = order.supplier || ''
+                  return supplierName.toLowerCase().includes(searchText.toLowerCase())
+                })}
+                rowKey="id"
+                loading={loading}
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: false,
+                  showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} đơn hàng`,
+                  position: ['bottomCenter']
+                }}
+                locale={{ emptyText: 'Không có đơn hàng nào' }}
+              />
+            </>
+          )}
+
+          {(availableOrders || []).length === 0 && !loading && (
+            <div style={{ textAlign: 'center', padding: 48, color: '#999' }}>
+              <FileAddOutlined style={{ fontSize: 48, marginBottom: 16 }} />
+              <p>Không có PO nào đã đối chiếu và chưa được đề xuất thanh toán</p>
+            </div>
+          )}
+        </>
+      )
+    },
+    {
+      key: 'created',
+      label: (
+        <span>
+          <CheckCircleOutlined /> Đã đề xuất
+          <Tag color="green" style={{ marginLeft: 8 }}>{createdProposals.length}</Tag>
+        </span>
+      ),
+      children: (
+        <>
+          {/* Filters for created proposals */}
+          <div style={{ background: '#f5f5f5', padding: 16, borderRadius: 8, marginBottom: 24 }}>
+            <Row gutter={16}>
+              <Col span={8}>
+                <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
+                  Khoảng ngày tạo
+                </label>
+                <RangePicker
+                  value={proposalDateRange}
+                  onChange={setProposalDateRange}
+                  format="DD/MM/YYYY"
+                  style={{ width: '100%' }}
+                  size="large"
+                  allowClear
+                />
+              </Col>
+              <Col span={16}>
+                <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
+                  Tìm kiếm (mã đề xuất, người tạo, tên NCC)
+                </label>
+                <Input
+                  placeholder="Tìm mã đề xuất, người tạo, nhà cung cấp..."
+                  prefix={<SearchOutlined />}
+                  allowClear
+                  style={{ width: '100%' }}
+                  value={proposalSearchText}
+                  onChange={(e) => setProposalSearchText(e.target.value)}
+                  size="large"
+                />
+              </Col>
+            </Row>
+            <div style={{ marginTop: 16 }}>
+              <Space>
+                <Tag color="green" icon={<FilterOutlined />}>
+                  {filteredProposals.length} đề xuất
+                </Tag>
+                {proposalDateRange && proposalDateRange[0] && proposalDateRange[1] && (
+                  <Tag color="orange">
+                    {proposalDateRange[0].format('DD/MM/YYYY')} - {proposalDateRange[1].format('DD/MM/YYYY')}
+                  </Tag>
+                )}
+                {proposalSearchText && (
+                  <Tag color="purple">
+                    Tìm: "{proposalSearchText}"
+                  </Tag>
+                )}
+              </Space>
+            </div>
+          </div>
+
+          {/* Proposals table */}
+          <Table
+            columns={proposalColumns}
+            dataSource={filteredProposals}
+            rowKey="id"
+            loading={loading}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} đề xuất`,
+              position: ['bottomCenter']
+            }}
+            locale={{ emptyText: 'Chưa có đề xuất nào' }}
+            scroll={{ x: 1200 }}
+          />
+        </>
+      )
+    }
+  ]
 
   return (
     <div style={{ padding: '24px', background: 'var(--bg-primary)', minHeight: '100vh' }}>
@@ -325,182 +762,17 @@ const PaymentProposalCreator = ({ onBack, onSuccess }) => {
             Quay lại
           </Button>
           <h2>
-            <FileAddOutlined /> 📝 Tạo Đề xuất Thanh toán NCC
+            <FileAddOutlined /> 📝 Đề xuất Thanh toán NCC
           </h2>
         </div>
 
-        {/* Filters */}
-        <div className="partner-section" style={{ background: '#f5f5f5', padding: 16, borderRadius: 8, marginBottom: 24 }}>
-          <Row gutter={16}>
-            <Col span={8}>
-              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-                Khoảng ngày <span style={{ color: 'red' }}>*</span>
-              </label>
-              <RangePicker
-                value={dateRange}
-                onChange={setDateRange}
-                format="DD/MM/YYYY"
-                style={{ width: '100%' }}
-                size="large"
-              />
-            </Col>
-
-            <Col span={8}>
-              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-                Nhóm nhà cung cấp
-              </label>
-              <Select
-                allowClear
-                showSearch
-                filterOption={(input, option) =>
-                  (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
-                }
-                style={{ width: '100%' }}
-                placeholder="Chọn nhóm nhà cung cấp"
-                onChange={(value) => {
-                  setSelectedGroup(value)
-                  setSelectedSupplier(null)
-                }}
-                value={selectedGroup}
-                size="large"
-              >
-                {(groups || []).map(g => (
-                  <Option key={g.id} value={g.id}>
-                    {g.name}
-                  </Option>
-                ))}
-              </Select>
-            </Col>
-
-            <Col span={8}>
-              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-                Nhà cung cấp cụ thể
-              </label>
-              <Select
-                allowClear
-                showSearch
-                filterOption={(input, option) =>
-                  (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
-                }
-                style={{ width: '100%' }}
-                placeholder="Chọn nhà cung cấp"
-                onChange={(value) => {
-                  const supplier = value ? suppliers.find(s => s.id === value) : null
-                  setSelectedSupplier(supplier)
-                }}
-                value={selectedSupplier?.id}
-                size="large"
-              >
-                {(suppliers || [])
-                  .filter(s => !selectedGroup || s.groupId === selectedGroup)
-                  .map(s => (
-                    <Option key={s.id} value={s.id}>
-                      {s.name} {s.groupName && <Tag color="blue" style={{ marginLeft: 4 }}>{s.groupName}</Tag>}
-                    </Option>
-                  ))}
-              </Select>
-            </Col>
-          </Row>
-
-          <div style={{ marginTop: 16 }}>
-            <Space>
-              <Tag color="blue" icon={<FilterOutlined />}>
-                {(availableOrders || []).length} đơn hàng tìm thấy
-              </Tag>
-              {selectedGroup && (
-                <Tag color="purple">
-                  Nhóm: {groups.find(g => g.id === selectedGroup)?.name}
-                </Tag>
-              )}
-              {selectedSupplier && (
-                <Tag color="cyan">
-                  {selectedSupplier.name}
-                </Tag>
-              )}
-              {dateRange && dateRange[0] && dateRange[1] && (
-                <Tag color="orange">
-                  {dateRange[0].format('DD/MM/YYYY')} - {dateRange[1].format('DD/MM/YYYY')}
-                </Tag>
-              )}
-            </Space>
-          </div>
-        </div>
-
-        {/* Summary of selected by supplier */}
-        {supplierSummary.length > 0 && (
-          <div style={{ background: '#e6f7ff', padding: 16, borderRadius: 8, marginBottom: 24 }}>
-            <h3 style={{ marginTop: 0 }}>📋 Tóm tắt đề xuất ({supplierSummary.length} NCC)</h3>
-            <Row gutter={[16, 16]}>
-              {supplierSummary.map(group => (
-                <Col key={group.supplierId} span={8}>
-                  <Card size="small" style={{ background: 'white' }}>
-                    <div style={{ fontWeight: 600, marginBottom: 8 }}>{group.supplierName}</div>
-                    <div style={{ color: '#666' }}>{group.orders.length} đơn hàng</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: '#1890ff', marginTop: 8 }}>
-                      {group.total.toLocaleString()} VND
-                    </div>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-            <Divider />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <strong style={{ fontSize: 16 }}>
-                  Tổng cộng: {selectedOrderIds.length} đơn - {totalSelected.toLocaleString()} VND
-                </strong>
-              </div>
-              <Button
-                type="primary"
-                icon={<SendOutlined />}
-                size="large"
-                onClick={handleCreateProposal}
-                loading={submitting}
-              >
-                Tạo Đề xuất
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Orders table */}
-        {(availableOrders || []).length > 0 && (
-          <>
-            <div style={{ margin: '24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Tag color="blue" style={{ fontSize: 14, padding: '4px 12px' }}>
-                Danh sách PO - Sẵn sàng tạo đề xuất
-              </Tag>
-              <Input
-                placeholder="Tìm nhà cung cấp..."
-                prefix={<SearchOutlined />}
-                allowClear
-                style={{ width: 300 }}
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                size="large"
-              />
-            </div>
-
-            <Table
-              rowSelection={rowSelection}
-              columns={columns}
-              dataSource={availableOrders.filter(order => {
-                if (!searchText) return true
-                const supplierName = order.supplier || ''
-                return supplierName.toLowerCase().includes(searchText.toLowerCase())
-              })}
-              rowKey="id"
-              loading={loading}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: false,
-                showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} đơn hàng`,
-                position: ['bottomCenter']
-              }}
-              locale={{ emptyText: 'Không có đơn hàng nào' }}
-            />
-          </>
-        )}
+        {/* Tabs */}
+        <Tabs 
+          activeKey={activeTab} 
+          onChange={setActiveTab}
+          items={tabItems}
+          size="large"
+        />
       </Card>
     </div>
 
@@ -514,6 +786,33 @@ const PaymentProposalCreator = ({ onBack, onSuccess }) => {
         <Button key="cancel" onClick={() => setShowDetailModal(false)}>
           Hủy
         </Button>,
+        <PrintButton
+          key="print"
+          templateId="DE_XUAT_THANH_TOAN"
+          templateName="Đề xuất Thanh toán"
+          data={{
+            proposalCode: `DXTT-${dayjs().format('YYMMDDHHmmss')}`,
+            createdAt: new Date().toISOString(),
+            createdBy: 'Kế toán',
+            supplierGroups: supplierDetails.map(d => ({
+              supplierCode: d.maNCC || '',
+              supplierName: d.tenNCC,
+              noiDungThanhToan: d.noiDungThanhToan || `Thanh toán ${d.poIds?.length || 0} đơn hàng`,
+              lastPaymentDate: d.ngayTTGanNhat || null,
+              lastPaymentAmount: typeof d.soTienTTGanNhat === 'string' 
+                ? parseInt(d.soTienTTGanNhat.replace(/[^0-9]/g, '')) || 0
+                : d.soTienTTGanNhat || 0,
+              paymentAmount: d.soTienDeXuat,
+              ghiChu: d.ghiChu,
+              orders: d.poIds ? d.poIds.map(id => ({ orderCode: id })) : []
+            })),
+            ghiChu: proposalNote,
+            totalPayment: supplierDetails.reduce((sum, d) => sum + (d.soTienDeXuat || 0), 0)
+          }}
+          config={getCompanyConfig()}
+          buttonText="In bản nháp"
+          buttonType="default"
+        />,
         <Button
           key="submit"
           type="primary"

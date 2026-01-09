@@ -9,12 +9,14 @@ import Sidebar from './components/Sidebar'
 import PaymentProposalCreator from './components/PaymentProposalCreator'
 import ProposalApprovalList from './components/ProposalApprovalList'
 import ProposalApprovalDetail from './components/ProposalApprovalDetail'
+import PrintTemplateManager from './components/print/PrintTemplateManager'
 import './App.css'
 
 function App() {
   const [view, setView] = useState('general-dashboard') // general-dashboard, grouper, selector, payment, payment-proposal-creator, proposal-approval-list, proposal-approval-detail
   const [selectedDocument, setSelectedDocument] = useState(null)
   const [selectedProposal, setSelectedProposal] = useState(null)
+  const [viewOnlyProposal, setViewOnlyProposal] = useState(false) // true khi xem từ tab "Đã đề xuất" (chỉ xem, không duyệt)
   const [currentType, setCurrentType] = useState(null) // AP or AR
   const [darkMode, setDarkMode] = useState(true) // Mặc định dark mode
   const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile sidebar toggle
@@ -104,6 +106,11 @@ function App() {
         <PaymentProposalCreator
           onBack={handleBack}
           onSuccess={() => setView('proposal-approval-list')}
+          onViewProposal={(proposalId) => {
+            setSelectedProposal(proposalId)
+            setViewOnlyProposal(true) // Từ tab "Đã đề xuất" - chỉ xem, không có nút duyệt
+            setView('proposal-approval-detail')
+          }}
         />
       )
     }
@@ -113,7 +120,11 @@ function App() {
       return (
         <ProposalApprovalList
           onBack={handleBack}
-          onSelectProposal={handleSelectProposal}
+          onSelectProposal={(proposalId) => {
+            setSelectedProposal(proposalId)
+            setViewOnlyProposal(false) // Từ danh sách duyệt - có thể duyệt
+            setView('proposal-approval-detail')
+          }}
         />
       )
     }
@@ -123,8 +134,19 @@ function App() {
       return (
         <ProposalApprovalDetail
           proposalId={selectedProposal}
-          onBack={() => setView('proposal-approval-list')}
-          onSuccess={() => setView('proposal-approval-list')}
+          viewOnly={viewOnlyProposal}
+          onBack={() => {
+            if (viewOnlyProposal) {
+              setView('payment-proposal-creator')
+            } else {
+              setView('proposal-approval-list')
+            }
+            setViewOnlyProposal(false)
+          }}
+          onSuccess={() => {
+            setView('proposal-approval-list')
+            setViewOnlyProposal(false)
+          }}
         />
       )
     }
@@ -137,6 +159,13 @@ function App() {
           darkMode={darkMode}
           onToggleDarkMode={() => setDarkMode(!darkMode)}
         />
+      )
+    }
+
+    // Print Template Manager - Tạo Form Hành chính
+    if (view === 'print-template-manager') {
+      return (
+        <PrintTemplateManager />
       )
     }
 
