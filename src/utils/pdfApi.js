@@ -15,8 +15,6 @@ const PDF_SERVER_URL = import.meta.env?.VITE_PDF_SERVER_URL || 'http://localhost
  */
 export async function generatePDF(documentType, data, config = {}, openInNewTab = true, printSettings = null) {
   try {
-    console.log('[PDF API] Generating:', documentType, printSettings ? `(${printSettings.orientation})` : '')
-
     const response = await fetch(`${PDF_SERVER_URL}/api/print`, {
       method: 'POST',
       headers: {

@@ -490,11 +490,6 @@ const PhieuThuChiForm = ({ refId, refType, loaiPhieuProp, isViewOnly = false, is
     return <Card>Không tìm thấy dữ liệu</Card>
   }
 
-  // Debug log documentData
-  console.log('=== documentData ===', documentData)
-  console.log('documentData.supplier:', documentData.supplier)
-  console.log('documentData.items:', documentData.items)
-
   const isLocked = isViewOnly || documentData.status === 'DA_THANH_TOAN' || documentData.status === 'DA_THU_TIEN'
 
   return (

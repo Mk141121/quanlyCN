@@ -14,9 +14,7 @@ const PDF_SERVER_URL = import.meta.env.VITE_PDF_SERVER_URL || 'http://localhost:
 const getTemplatePrintSettings = (templateId) => {
   try {
     const templates = getTemplates()
-    console.log('[PrintButton] All templates:', templates.map(t => ({ id: t.id, ps: t.printSettings })))
     const template = templates.find(t => t.id === templateId)
-    console.log('[PrintButton] Found template for', templateId, ':', template?.printSettings)
     return template?.printSettings || null
   } catch (e) {
     console.error('[PrintButton] Error getting template settings:', e)
@@ -59,8 +57,6 @@ const PrintButton = ({
     try {
       // Lấy printSettings từ props hoặc tự động từ localStorage
       const settings = printSettings || getTemplatePrintSettings(templateId)
-      
-      console.log('[PrintButton] Generating PDF:', templateId, settings ? `(${settings.paperSize} ${settings.orientation})` : '(default)')
 
       const response = await fetch(`${PDF_SERVER_URL}/api/print`, {
         method: 'POST',
@@ -100,8 +96,6 @@ const PrintButton = ({
 
       // Cleanup URL sau một khoảng thời gian
       setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000)
-
-      console.log('[PrintButton] PDF generated successfully')
 
     } catch (error) {
       console.error('[PrintButton] Error generating PDF:', error)

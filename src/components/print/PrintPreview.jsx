@@ -44,17 +44,12 @@ const PrintPreview = ({ template, visible, onClose, customData = null }) => {
     if (visible) {
       const config = getCompanyConfig()
       setCompanyConfig(config)
-      console.log('Loaded company config:', config.printSettings)
     }
   }, [visible, template])
 
   if (!template) return null
 
   const data = customData || template.documentData || {}
-  
-  // Debug data
-  console.log('PrintPreview data:', data)
-  console.log('nguoiNhan:', data.nguoiNhan, 'nguoiNop:', data.nguoiNop)
 
   // Render field value based on type
   const renderValue = (field, value) => {
@@ -458,11 +453,6 @@ const PrintPreview = ({ template, visible, onClose, customData = null }) => {
   // Get dynamic wrapper and container styles based on printSettings
   const getPreviewStyles = () => {
     const paperDims = getPaperDimensions()
-    const ps = template?.printSettings || {}
-    
-    // Debug log
-    console.log('Print Settings:', ps)
-    console.log('Paper Dimensions:', paperDims)
     
     const wrapperStyle = {
       width: `${paperDims.width}mm`,
